@@ -13,6 +13,8 @@ export class UI {
     this.snacks = [];
     this.activeTab = "orders";
     this.htmlCache = new Map();
+    this.logicalWidth = Number(game.canvas.dataset.logicalWidth) || game.canvas.width;
+    this.logicalHeight = Number(game.canvas.dataset.logicalHeight) || game.canvas.height;
   }
 
   update() {
@@ -587,8 +589,8 @@ export class UI {
   }
 
   labelHtml(x, y, text, className) {
-    const left = x / (this.game.canvas.width || 1) * 100;
-    const top = y / (this.game.canvas.height || 1) * 100;
+    const left = x / (this.logicalWidth || 1) * 100;
+    const top = y / (this.logicalHeight || 1) * 100;
     return `<div class="world-label ${className}" style="left:${left}%;top:${top}%">${text}</div>`;
   }
 }
