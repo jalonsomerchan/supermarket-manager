@@ -29,7 +29,7 @@ Este documento resume los ficheros actuales del repositorio y la utilidad princi
 | --- | --- |
 | `js/main.js` | Punto de arranque JavaScript. Importa la configuración y la clase `Game`, ajusta el tamaño del canvas según el mapa configurado, instancia el juego y llama a `game.start()`. |
 | `js/config.js` | Configuración central del juego. Contiene tamaños, mundo, controles, rutas de sprites, mapa, productos, licencias, mejoras, parámetros de jugador y clientes. Es la fuente principal de datos ajustables. |
-| `js/game.js` | Orquestador principal del juego. Crea assets, input, estado, jugador, UI y renderer; controla el bucle de actualización/renderizado, cambios de fase, clientes, reputación, guardado/carga y cierre de día. |
+| `js/game.js` | Orquestador principal del juego. Crea assets, input, estado, jugador, UI y renderer; controla el bucle de actualización/renderizado, objetivo de interacción actual, cambios de fase, clientes, reputación, guardado/carga y cierre de día. |
 | `js/assets.js` | Cargador de imágenes. Recorre los sprites definidos en `CONFIG`, crea objetos `Image`, espera a su carga y los deja disponibles para el renderer. |
 | `js/input.js` | Gestión de entrada de usuario. Centraliza teclado y controles táctiles, expone acciones consumibles y vector de movimiento, y traduce teclas configuradas a acciones de juego. |
 | `js/state.js` | Factoría del estado inicial. Construye productos, licencias, mejoras, estantes, palés, pedidos, clientes, mensajes y flags de interfaz para empezar o restaurar una partida. |
@@ -38,14 +38,14 @@ Este documento resume los ficheros actuales del repositorio y la utilidad princi
 
 | Fichero | Utilidad |
 | --- | --- |
-| `js/entities/player.js` | Lógica del jugador. Gestiona posición, dirección, animación, velocidad, interacción con cajas, estantes, palés, caja registradora, terminal, reciclaje, clientes y movimiento de mobiliario. |
+| `js/entities/player.js` | Lógica del jugador. Gestiona posición, dirección, animación, velocidad, detección centralizada del objetivo de interacción, interacción con cajas, estantes, palés, caja registradora, terminal, reciclaje, clientes y movimiento de mobiliario. |
 | `js/entities/customer.js` | Lógica de clientes. Define listas de compra, navegación por el mapa, inspección de estantes, colas, compra, abandono, paciencia y efectos sobre ventas/reputación. |
 
 ## Sistemas
 
 | Fichero | Utilidad |
 | --- | --- |
-| `js/systems/render.js` | Sistema de renderizado sobre canvas. Dibuja mapa, paredes, puertas, objetos, cajas, estantes, personajes, burbujas y estados visuales usando sprites y formas simples. |
+| `js/systems/render.js` | Sistema de renderizado sobre canvas. Dibuja mapa, paredes, puertas, objetos, cajas, estantes, personajes, burbujas, indicador visual del objetivo de interacción y estados visuales usando sprites y formas simples. |
 | `js/systems/world.js` | Utilidades del mundo y colisiones. Calcula casillas bloqueadas, posiciones de tiles, zonas cercanas e identificadores de casillas adyacentes transitables. |
 | `js/systems/orders.js` | Sistema de pedidos y entregas. Permite comprar mercancía, descuenta dinero/costes, gestiona temporizadores de entrega y coloca cajas en palés libres o reintenta si no hay hueco. |
 | `js/systems/economy.js` | Sistema económico. Gestiona productos desbloqueados, compra de licencias y mejoras, cambios de precio y progresión de reputación. |
