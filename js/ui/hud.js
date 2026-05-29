@@ -84,8 +84,9 @@ export class UI {
     this.game.state.terminalOpen = true;
     this.modal.classList.remove("hidden");
     this.modal.innerHTML = `
-      <article class="modal-card">
+      <article class="modal-card terminal-card-wrap">
         <h1>Terminal de Gestion</h1>
+        <p class="terminal-hint">Consulta stock, costes y requisitos antes de comprar o ajustar precios.</p>
         <div class="controls">
           <button class="pixel-btn" data-tab="orders">Pedidos</button>
           <button class="pixel-btn" data-tab="prices">Precios</button>
@@ -116,51 +117,158 @@ export class UI {
 
   ordersHtml() {
     const { state } = this.game;
-    return `<h2>Pedidos al proveedor</h2><div class="grid-list">${
-      ownedProductIds(state).map((id) => {
+    return `${this.terminalIntro("Pedidos al proveedor", "Elige productos mirando stock, capacidad y coste real por unidad.")}
+      <div class="grid-list terminal-grid">${ownedProductIds(state).map((id) => {
         const p = state.products[id];
-        return `<div class="row"><span>${p.name}: caja ${p.lot} uds. Coste ${money(p.boxCost)}</span><button class="pixel-btn" data-order="${id}">Pedir</button></div>`;
-      }).join("")
-    }</div>`;
+        const stock = this.productStock(id);
+        const capacity = this.productCapacity(id);
+        const unitCost = p.boxCost / p.lot;
+        const margin = p.basePrice - unitCost;
+        const blocked = state.money < p.boxCost;
+        return this.terminalCard(
+          p.name,
+          `<div class="metric-grid">
+            ${this.metric("Stock", `${stock}/${capacity || p.shelfCapacity}`)}
+            ${this.metric("Caja", `${p.lot} uds.`)}
+            ${this.metric("Coste caja", money(p.boxCost))}
+            ${this.metric("Coste/ud", money(unitCost))}
+            ${this.metric("Margen aprox.", money(margin), margin >= 0 ? "good" : "bad")}
+          </div>
+          <p class="terminal-note">${capacity ? "Reponer ahora ayuda a mantener ventas." : "Compra antes una estanteria para venderlo."}</p>`,
+          `<button class="pixel-btn" data-order="${id}" ${blocked ? "disabled" : ""}>Pedir</button>`,
+          blocked ? "locked" : ""
+        );
+      }).join("")}</div>`;
   }
 
   pricesHtml() {
-    const { state } = this.game;
-    return `<h2>Precios de venta</h2><div class="grid-list">${
-      ownedProductIds(state).map((id) => {
+    const { state, config } = this.game;
+    return `${this.terminalIntro("Precios de venta", "Compara precio actual, recomendado y margen antes de subir o bajar.")}
+      <div class="grid-list terminal-grid">${ownedProductIds(state).map((id) => {
         const p = state.products[id];
-        return `<div class="row"><span>${p.name}: ${money(p.basePrice)} <small>recomendado ${money(p.basePriceRecommended)}</small></span><span><button class="pixel-btn" data-price="${id}" data-delta="-0.1">-</button> <button class="pixel-btn" data-price="${id}" data-delta="0.1">+</button></span></div>`;
-      }).join("")
-    }</div>`;
+        const unitCost = p.boxCost / p.lot;
+        const margin = p.basePrice - unitCost;
+        const ratio = p.basePrice / p.basePriceRecommended;
+        const isExpensive = ratio >= config.customer.overpriceSoftLimit;
+        const status = isExpensive ? "Caro: puede reducir ventas" : ratio < 0.9 ? "Barato: vendes facil" : "Equilibrado";
+        return this.terminalCard(
+          p.name,
+          `<div class="metric-grid">
+            ${this.metric("Actual", money(p.basePrice), isExpensive ? "bad" : "")}
+            ${this.metric("Recomendado", money(p.basePriceRecommended))}
+            ${this.metric("Margen aprox.", money(margin), margin >= 0 ? "good" : "bad")}
+          </div>
+          <p class="terminal-note ${isExpensive ? "bad" : ""}">${status}</p>`,
+          `<span class="price-actions"><button class="pixel-btn" data-price="${id}" data-delta="-0.1">-0.10</button><button class="pixel-btn" data-price="${id}" data-delta="0.1">+0.10</button></span>`,
+          isExpensive ? "warn" : ""
+        );
+      }).join("")}</div>`;
   }
 
   licensesHtml() {
     const { state } = this.game;
-    return `<h2>Licencias</h2><div class="grid-list">${
-      Object.entries(state.licenses).map(([id, license]) => `<div class="row"><span>${license.name}: ${license.owned ? "Comprada" : `${money(license.cost)} / Rep ${license.level}`}</span><button class="pixel-btn" data-license="${id}" ${license.owned ? "disabled" : ""}>Comprar</button></div>`).join("")
-    }</div>`;
+    return `${this.terminalIntro("Licencias", "Desbloquea nuevas familias cuando tengas reputacion y dinero suficientes.")}
+      <div class="grid-list terminal-grid">${Object.entries(state.licenses).map(([id, license]) => {
+        const products = license.products.map((productId) => state.products[productId].name).join(", ");
+        const lacksRep = state.reputation < license.level;
+        const lacksMoney = state.money < license.cost;
+        const disabled = license.owned || lacksRep || lacksMoney;
+        const stateText = license.owned ? "Comprada" : lacksRep ? `Necesita Rep ${license.level}` : lacksMoney ? "Falta dinero" : "Disponible";
+        return this.terminalCard(
+          license.name,
+          `<div class="metric-grid">
+            ${this.metric("Coste", money(license.cost))}
+            ${this.metric("Reputacion", `Nivel ${license.level}`, lacksRep ? "bad" : "good")}
+            ${this.metric("Estado", stateText, license.owned ? "good" : lacksRep || lacksMoney ? "bad" : "gold")}
+          </div>
+          <p class="terminal-note">Productos: ${products}</p>`,
+          `<button class="pixel-btn" data-license="${id}" ${disabled ? "disabled" : ""}>Comprar</button>`,
+          license.owned ? "owned" : disabled ? "locked" : ""
+        );
+      }).join("")}</div>`;
   }
 
   upgradesHtml() {
     const { state, config } = this.game;
-    return `<h2>Mejoras</h2><div class="grid-list">${
-      Object.entries(config.upgrades).map(([id, up]) => `<div class="row"><span>${up.name}: ${state.upgrades[id] ? "Activa" : `${money(up.cost)} - ${up.desc}`}</span><button class="pixel-btn" data-upgrade="${id}" ${state.upgrades[id] ? "disabled" : ""}>Comprar</button></div>`).join("")
-    }</div>`;
+    return `${this.terminalIntro("Mejoras", "Compra ventajas permanentes que aceleran operacion, cobro o expansion.")}
+      <div class="grid-list terminal-grid">${Object.entries(config.upgrades).map(([id, up]) => {
+        const owned = state.upgrades[id];
+        const lacksMoney = state.money < up.cost;
+        const disabled = owned || lacksMoney;
+        return this.terminalCard(
+          up.name,
+          `<div class="metric-grid">
+            ${this.metric("Coste", money(up.cost))}
+            ${this.metric("Estado", owned ? "Activa" : lacksMoney ? "Falta dinero" : "Disponible", owned ? "good" : lacksMoney ? "bad" : "gold")}
+          </div>
+          <p class="terminal-note">Beneficio: ${up.desc}</p>`,
+          `<button class="pixel-btn" data-upgrade="${id}" ${disabled ? "disabled" : ""}>Comprar</button>`,
+          owned ? "owned" : lacksMoney ? "locked" : ""
+        );
+      }).join("")}</div>`;
   }
 
   furnitureHtml() {
     const { config, state } = this.game;
-    const products = ownedProductIds(state).map((productId) => {
+    const shelfCards = ownedProductIds(state).map((productId) => {
       const product = state.products[productId];
-      return `<button class="pixel-btn product-buy" data-shelf-product="${productId}">Estanteria: ${product.name} · ${money(config.furniture.shelf.cost)}</button>`;
+      const item = config.furniture.shelf;
+      const disabled = state.money < item.cost;
+      return this.terminalCard(
+        `${item.name}: ${product.name}`,
+        `<div class="metric-grid">
+          ${this.metric("Coste", money(item.cost))}
+          ${this.metric("Tamano", `${item.w}x${item.h}`)}
+          ${this.metric("Capacidad", `${product.shelfCapacity} uds.`)}
+        </div>
+        <p class="terminal-note">Crea una estanteria para este producto. Tras comprarla, colocala con Q.</p>`,
+        `<button class="pixel-btn product-buy" data-shelf-product="${productId}" ${disabled ? "disabled" : ""}>Comprar</button>`,
+        disabled ? "locked" : ""
+      );
     }).join("");
-    return `<h2>Comprar mobiliario</h2><p>Al comprarlo entras en modo mover: colocarlo con Q.</p><div class="grid-list">${
-      products}
-      ${Object.entries(config.furniture)
-        .filter(([id]) => id !== "shelf")
-        .map(([id, item]) => `<div class="row"><span>${item.name}: ${money(item.cost)}</span><button class="pixel-btn" data-furniture="${id}">Comprar</button></div>`)
-        .join("")
-    }</div>`;
+    const furnitureCards = Object.entries(config.furniture)
+      .filter(([id]) => id !== "shelf")
+      .map(([id, item]) => {
+        const disabled = state.money < item.cost;
+        const purpose = id === "pallet" ? "Zona de almacen para recibir cajas." : "Permite reciclar cajas vacias.";
+        return this.terminalCard(
+          item.name,
+          `<div class="metric-grid">
+            ${this.metric("Coste", money(item.cost))}
+            ${this.metric("Tamano", `${item.w}x${item.h}`)}
+          </div>
+          <p class="terminal-note">${purpose} Tras comprarlo, colocalo con Q.</p>`,
+          `<button class="pixel-btn" data-furniture="${id}" ${disabled ? "disabled" : ""}>Comprar</button>`,
+          disabled ? "locked" : ""
+        );
+      })
+      .join("");
+    return `${this.terminalIntro("Comprar mobiliario", "El mobiliario entra en modo mover; colocacion final con Q.")}
+      <div class="grid-list terminal-grid">${shelfCards}${furnitureCards}</div>`;
+  }
+
+  terminalIntro(title, text) {
+    return `<header class="terminal-intro"><h2>${title}</h2><p>${text}</p></header>`;
+  }
+
+  terminalCard(title, body, action, className = "") {
+    return `<article class="terminal-card ${className}"><div class="terminal-card-main"><h3>${title}</h3>${body}</div><div class="terminal-actions">${action}</div></article>`;
+  }
+
+  metric(label, value, className = "") {
+    return `<span class="metric ${className}"><small>${label}</small><strong>${value}</strong></span>`;
+  }
+
+  productStock(productId) {
+    return this.game.state.shelves
+      .filter((shelf) => shelf.productId === productId)
+      .reduce((total, shelf) => total + shelf.stock, 0);
+  }
+
+  productCapacity(productId) {
+    return this.game.state.shelves
+      .filter((shelf) => shelf.productId === productId)
+      .reduce((total, shelf) => total + this.game.state.products[shelf.productId].shelfCapacity, 0);
   }
 
   handleModalClick(event) {
