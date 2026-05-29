@@ -33,6 +33,8 @@ export const CONFIG = {
   },
   sprites: {
     player: "assets/sprites/player/sheet-transparent.png",
+    playerBoxFull: "assets/sprites/player-box-full/sheet-transparent.png",
+    playerBoxEmpty: "assets/sprites/player-box-empty/sheet-transparent.png",
     customer: "assets/sprites/customer/sheet-transparent.png",
     shelf: "assets/sprites/shelf/sprite.png",
     register: "assets/sprites/register/sprite.png",

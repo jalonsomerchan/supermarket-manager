@@ -168,7 +168,8 @@ export class Renderer {
   }
 
   drawActor(actor) {
-    const image = actor.constructor.name === "Player" ? this.assets.images.player : this.assets.images.customer;
+    const isPlayer = actor.constructor.name === "Player";
+    const image = isPlayer ? this.playerImage(actor) : this.assets.images.customer;
     const s = this.config.sprites;
     const row = s.directions[actor.dir] ?? 0;
     this.ctx.drawImage(
@@ -182,23 +183,32 @@ export class Renderer {
       54,
       54
     );
-    if (actor.carry) this.drawCarry(actor);
+    if (isPlayer && actor.carry && !actor.carry.empty) this.drawCarryLabel(actor);
   }
 
-  drawCarry(actor) {
+  playerImage(actor) {
+    if (actor.carry?.empty) return this.assets.images.playerBoxEmpty;
+    if (actor.carry) return this.assets.images.playerBoxFull;
+    return this.assets.images.player;
+  }
+
+  drawCarryLabel(actor) {
     const product = actor.carry.productId ? this.currentState?.products[actor.carry.productId] : null;
+    if (!product) return;
+    const label = `${product.name} x${actor.carry.units}`;
     const x = Math.round(actor.x);
-    const y = Math.round(actor.y);
-    this.ctx.fillStyle = actor.carry.empty ? "#b38452" : product?.color || "#d19854";
-    this.ctx.fillRect(x - 12, y - 34, 24, 14);
-    this.ctx.strokeStyle = "#5c3b24";
-    this.ctx.strokeRect(x - 12, y - 34, 24, 14);
-    if (product) {
-      this.ctx.fillStyle = "#201820";
-      this.ctx.font = "bold 7px Courier New";
-      this.ctx.textAlign = "center";
-      this.drawText(product.name.slice(0, 4).toUpperCase(), x, y - 24);
-    }
+    const top = clamp(Math.round(actor.y - 68), 4, this.logicalHeight - 21);
+    const width = Math.max(58, label.length * 6 + 14);
+    const left = clamp(Math.round(x - width / 2), 4, this.logicalWidth - width - 4);
+    this.ctx.fillStyle = "#21192a";
+    this.ctx.fillRect(left, top, width, 17);
+    this.ctx.strokeStyle = product.color || "#f7c948";
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeRect(left + 0.5, top + 0.5, width - 1, 16);
+    this.ctx.fillStyle = "#fff6dc";
+    this.ctx.font = "bold 8px Courier New";
+    this.ctx.textAlign = "center";
+    this.drawText(label, left + width / 2, top + 12);
   }
 
   drawBubbles(customers) {
