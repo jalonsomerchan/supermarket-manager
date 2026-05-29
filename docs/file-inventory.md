@@ -8,7 +8,7 @@ Este documento resume los ficheros actuales del repositorio y la utilidad princi
 | --- | --- |
 | `agents.md` | Define las normas obligatorias para agentes IA y automatizaciones que trabajen en el repositorio. Incluye reglas de calidad, documentación, GitHub API, modularidad, despliegue en GitHub Pages, comprobaciones y revisión antes de finalizar tareas. |
 | `package.json` | Declara el proyecto como módulo ES y contiene scripts de desarrollo/comprobación: `serve` para servir la app con `python3 -m http.server 8092` y `check` para validar sintaxis de los ficheros JavaScript con `node --check`. |
-| `index.html` | Punto de entrada de la aplicación. Carga `css/styles.css`, define la estructura principal de la interfaz, el canvas del juego, HUD, panel lateral, controles táctiles, toast, modal y arranca `js/main.js` como módulo. |
+| `index.html` | Punto de entrada de la aplicación. Carga `css/styles.css`, define la estructura principal de la interfaz, el canvas del juego, HUD, controles táctiles, toast, modal y arranca `js/main.js` como módulo. |
 
 ## GitHub Actions
 
@@ -21,7 +21,7 @@ Este documento resume los ficheros actuales del repositorio y la utilidad princi
 
 | Fichero | Utilidad |
 | --- | --- |
-| `css/styles.css` | Hoja de estilos global de la aplicación. Define variables CSS, layout principal, apariencia del canvas, HUD, paneles, modales, botones, controles táctiles, barras de stock, avisos y comportamiento responsive. |
+| `css/styles.css` | Hoja de estilos global de la aplicación. Define variables CSS, layout principal, apariencia del canvas, HUD, modales, botones, controles táctiles, avisos, ayudas de pausa y comportamiento responsive. |
 
 ## JavaScript principal
 
@@ -55,7 +55,7 @@ Este documento resume los ficheros actuales del repositorio y la utilidad princi
 
 | Fichero | Utilidad |
 | --- | --- |
-| `js/ui/hud.js` | Interfaz de usuario del juego. Actualiza HUD, panel lateral, etiquetas del mundo, toasts, terminal de gestión, pestañas de pedidos/precios/licencias/mejoras/mobiliario, informes, pausa, carga/guardado y modales informativos. |
+| `js/ui/hud.js` | Interfaz de usuario del juego. Actualiza HUD, etiquetas del mundo, toasts, terminal de gestión, pestañas de pedidos/precios/licencias/mejoras/mobiliario, ayuda de pausa, informes, carga/guardado y modales informativos. |
 
 ## Utilidades
 
