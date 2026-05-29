@@ -12,26 +12,42 @@ export class UI {
     this.worldLabels = document.getElementById("world-labels");
     this.snacks = [];
     this.activeTab = "orders";
+    this.htmlCache = new Map();
   }
 
   update() {
+    this.renderHud();
+    this.renderPanel();
+    this.renderWorldLabels();
+    this.flushMessages();
+    this.renderSnacks();
+  }
+
+  renderHud() {
     const { state, config } = this.game;
     const hour = config.world.openingHour + state.elapsed / config.world.realDaySeconds * 12;
     const h = Math.floor(hour);
     const m = Math.floor((hour - h) * 60).toString().padStart(2, "0");
     const orders = state.orders.map((order) => `Camion ${state.products[order.productId].name} ${Math.ceil(order.remaining)}s`);
     const shopLabel = state.phase === "closed" ? "Cerrado" : state.phase === "open" ? "Abierto" : "Cierre";
-    this.hud.innerHTML = `
+    const html = `
       <div class="tag"><span>Dia</span> ${state.day} ${h}:${m}</div>
       <div class="tag"><span>Caja</span> ${money(state.money)}</div>
       <div class="tag"><span>Rep</span> ${state.reputation} (${state.reputationXp}/${config.world.reputationPerLevel})</div>
       <div class="tag ${state.phase}"><span>Estado</span> ${shopLabel}</div>
       ${orders.map((text) => `<div class="tag">${text}</div>`).join("")}
     `;
-    this.panel.innerHTML = this.panelHtml();
-    this.renderWorldLabels();
-    this.flushMessages();
-    this.renderSnacks();
+    this.setHtml("hud", this.hud, html);
+  }
+
+  renderPanel() {
+    this.setHtml("panel", this.panel, this.panelHtml());
+  }
+
+  setHtml(key, element, html) {
+    if (this.htmlCache.get(key) === html) return;
+    this.htmlCache.set(key, html);
+    element.innerHTML = html;
   }
 
   panelHtml() {
@@ -425,9 +441,10 @@ export class UI {
   }
 
   renderSnacks() {
-    this.toastEl.innerHTML = this.snacks
+    const html = this.snacks
       .map((snack) => `<div class="snack ${snack.type}">${snack.text}</div>`)
       .join("");
+    this.setHtml("snacks", this.toastEl, html);
   }
 
   renderWorldLabels() {
@@ -452,7 +469,7 @@ export class UI {
         `bubble-label ${["empty", "coin", "hourglass"].includes(customer.bubble) ? "warn" : ""}`
       ));
     }
-    this.worldLabels.innerHTML = labels.join("");
+    this.setHtml("worldLabels", this.worldLabels, labels.join(""));
   }
 
   bubbleText(customer) {
