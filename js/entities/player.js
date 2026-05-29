@@ -1,5 +1,6 @@
 import { clamp, distance, tileCenter } from "../utils/math.js";
-import { nearbyRect, tileAt, canStand } from "../systems/world.js";
+import { nearbyRect, tileAt, canStand, adjacentOpenTiles } from "../systems/world.js";
+import { findPath } from "../utils/pathfinding.js";
 
 export class Player {
   constructor(config) {
@@ -170,7 +171,7 @@ export class Player {
   dropObject(game, moving) {
     const target = this.facingTile();
     const rect = { x: target.x, y: target.y, w: moving.w, h: moving.h };
-    if (!this.canPlace(rect, game)) return game.toast("No puedes soltarlo ahi.", "warn");
+    if (!this.canPlace(rect, game)) return game.toast("No puedes soltarlo ahi: bloquea el paso.", "warn");
     moving.ref.x = rect.x;
     moving.ref.y = rect.y;
     if (moving.type === "register") {
@@ -181,7 +182,15 @@ export class Player {
       ];
     }
     game.state.movingObject = null;
+    game.state.placementPreviewValid = true;
     game.toast(`${moving.name} colocado.`, "success");
+  }
+
+  canPlacePreview(game) {
+    const moving = game.state.movingObject;
+    if (!moving) return true;
+    const target = this.facingTile();
+    return this.canPlace({ x: target.x, y: target.y, w: moving.w, h: moving.h }, game);
   }
 
   canPlace(rect, game) {
@@ -190,7 +199,53 @@ export class Player {
         if (!canStand({ x, y }, game.blocked, game.config)) return false;
       }
     }
-    return true;
+    const blocked = this.blockedWithRect(game.blocked, rect);
+    const playerTile = this.tile();
+    if (!canStand(playerTile, blocked, game.config)) return false;
+    return this.canReachCriticalGoals(playerTile, blocked, game, rect);
+  }
+
+  blockedWithRect(blocked, rect) {
+    const next = new Set(blocked);
+    for (let y = rect.y; y < rect.y + rect.h; y++) {
+      for (let x = rect.x; x < rect.x + rect.w; x++) next.add(`${x},${y}`);
+    }
+    return next;
+  }
+
+  canReachCriticalGoals(start, blocked, game, movingRect) {
+    return this.criticalGoals(game, blocked, movingRect).every((goal) => this.routeExists(start, goal, blocked, game.config));
+  }
+
+  criticalGoals(game, blocked, movingRect) {
+    const { config, state } = game;
+    const goals = [config.map.exit, config.map.entrance];
+    this.addRectGoals(goals, config.map.office, blocked);
+    for (const register of config.map.registers) goals.push(register.queue[0], { x: register.x - 1, y: register.y });
+    for (const shelf of state.shelves) {
+      if (state.movingObject?.type === "shelf" && state.movingObject.id === shelf.id) continue;
+      this.addRectGoals(goals, shelf, blocked);
+    }
+    for (const [index, pallet] of state.pallets.entries()) {
+      if (state.movingObject?.type === "pallet" && state.movingObject.id === index) continue;
+      this.addRectGoals(goals, { ...pallet, w: 1, h: 1 }, blocked);
+    }
+    for (const [index, recycle] of state.recycles.entries()) {
+      if (state.movingObject?.type === "recycle" && state.movingObject.id === index) continue;
+      this.addRectGoals(goals, recycle, blocked);
+    }
+    if (["shelf", "pallet", "recycle", "office", "register"].includes(state.movingObject?.type)) this.addRectGoals(goals, movingRect, blocked);
+    return goals.filter(Boolean);
+  }
+
+  addRectGoals(goals, rect, blocked) {
+    goals.push(...adjacentOpenTiles(rect, blocked, this.config));
+  }
+
+  routeExists(start, goal, blocked, config) {
+    if (!canStand(goal, blocked, config)) return false;
+    if (start.x === goal.x && start.y === goal.y) return true;
+    return findPath(start, goal, (tile) => canStand(tile, blocked, config), config.world.cols, config.world.rows).length > 0;
   }
 
   facingTile() {
