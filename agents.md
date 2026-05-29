@@ -49,7 +49,13 @@ Todo agente IA debe aplicar estas reglas en cualquier cambio:
 7. No duplicar lógica si puede centralizarse.
 8. No crear ficheros grandes por comodidad; preferir piezas pequeñas con nombres claros.
 9. Documentar cualquier convención nueva que afecte al uso o mantenimiento del proyecto.
-10. Actualizar `docs/file-inventory.md` cuando se añadan, eliminen, renombren o muevan ficheros relevantes.
+10. Actualizar `docs/file-inventory.md` siempre que se añada, elimine, renombre o mueva cualquier fichero del repositorio.
+
+## Regla crítica sobre el índice de ficheros
+
+Cada vez que se añada un fichero nuevo al repositorio, sea de código, documentación, configuración, workflow, asset o cualquier otro tipo, el mismo cambio debe actualizar también `docs/file-inventory.md` para incluirlo en el índice con una descripción clara de su utilidad.
+
+No se debe abrir ni terminar una PR que añada ficheros nuevos sin esa actualización del índice. Si un fichero nuevo es temporal o generado y no debe versionarse, no debe añadirse al repositorio.
 
 ## Reglas obligatorias para crear issues
 
@@ -188,6 +194,7 @@ No debe asumir que un fichero existe sin comprobarlo.
 - Si se toca JavaScript, intentar mantener o actualizar `npm run check`.
 - Si se toca routing o carga de assets, comprobar compatibilidad con rutas relativas, dominio raíz, subrutas y GitHub Pages.
 - Si se toca UI, comprobar responsive y accesibilidad básica.
+- Si se añaden ficheros nuevos, comprobar que `docs/file-inventory.md` se ha actualizado en el mismo cambio.
 - Si no se pueden ejecutar comprobaciones, indicarlo claramente en la PR.
 
 ### Criterio general
@@ -299,6 +306,8 @@ Si se cambia una convención importante, actualizar el documento correspondiente
 
 Si se añaden, eliminan, renombran o mueven ficheros relevantes, actualizar `docs/file-inventory.md`.
 
+Si se añade cualquier fichero nuevo al repositorio, `docs/file-inventory.md` debe actualizarse en el mismo commit o PR para incluir ese fichero y su utilidad.
+
 ## Checklist antes de terminar una tarea
 
 - ¿Se han aplicado las reglas de este `agents.md`?
@@ -309,6 +318,7 @@ Si se añaden, eliminan, renombran o mueven ficheros relevantes, actualizar `doc
 - ¿Se ha evitado duplicar lógica o UI?
 - ¿El código cumple estándares de calidad, accesibilidad, SEO cuando aplique y rendimiento?
 - ¿Se mantiene `npm run check` como comprobación básica?
+- ¿Todo fichero nuevo añadido en la PR aparece también en `docs/file-inventory.md` con una descripción de utilidad?
 - ¿Se actualizó `docs/file-inventory.md` si cambió la estructura?
 - ¿Se actualizó la documentación si cambió una convención?
 
@@ -328,5 +338,6 @@ npm run serve
 - Usar fuentes externas.
 - Añadir JavaScript innecesario si HTML/CSS lo resuelve bien.
 - Crear ficheros enormes con varias responsabilidades.
+- Añadir ficheros nuevos sin registrarlos en `docs/file-inventory.md`.
 - Crear issues sin prompt accionable para resolverlas.
 - Ignorar este archivo por rapidez.
