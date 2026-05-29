@@ -6,9 +6,15 @@ Este documento resume los ficheros actuales del repositorio y la utilidad princi
 
 | Fichero | Utilidad |
 | --- | --- |
-| `agents.md` | Define las normas obligatorias para agentes IA y automatizaciones que trabajen en el repositorio. Incluye reglas de calidad, documentación, GitHub API, modularidad, i18n, pruebas y revisión antes de finalizar tareas. |
+| `agents.md` | Define las normas obligatorias para agentes IA y automatizaciones que trabajen en el repositorio. Incluye reglas de calidad, documentación, GitHub API, modularidad, despliegue en GitHub Pages, comprobaciones y revisión antes de finalizar tareas. |
 | `package.json` | Declara el proyecto como módulo ES y contiene scripts de desarrollo/comprobación: `serve` para servir la app con `python3 -m http.server 8092` y `check` para validar sintaxis de los ficheros JavaScript con `node --check`. |
 | `index.html` | Punto de entrada de la aplicación. Carga `css/styles.css`, define la estructura principal de la interfaz, el canvas del juego, HUD, panel lateral, controles táctiles, toast, modal y arranca `js/main.js` como módulo. |
+
+## GitHub Actions
+
+| Fichero | Utilidad |
+| --- | --- |
+| `.github/workflows/pages.yml` | Workflow de GitHub Actions para desplegar automáticamente la app estática en GitHub Pages desde `main`. Ejecuta `npm run check`, prepara `dist` con `index.html`, `css`, `js` y `assets`, sube el artefacto y publica con `actions/deploy-pages`. |
 
 ## Estilos
 
@@ -74,5 +80,6 @@ Este documento resume los ficheros actuales del repositorio y la utilidad princi
 
 - Si se añade un módulo JavaScript, documentarlo en la sección que corresponda: principal, entidad, sistema, interfaz o utilidad.
 - Si se añade un asset referenciado desde `js/config.js`, incluirlo también en la sección de assets gráficos.
+- Si se añade, cambia o elimina un workflow, documentarlo en la sección de GitHub Actions.
 - Si se cambia el propósito de un fichero, actualizar su descripción para que este inventario siga siendo útil para nuevos agentes y mantenedores.
-- Este proyecto actual es una app HTML/CSS/JavaScript ligera; algunas normas de `agents.md` hacen referencia a una base Astro heredada y solo aplican cuando exista esa estructura o cuando se reincorpore.
+- Este proyecto actual es una app HTML/CSS/JavaScript ligera sin build step obligatorio.
