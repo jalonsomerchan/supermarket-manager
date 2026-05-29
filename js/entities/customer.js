@@ -76,12 +76,20 @@ export class Customer {
     this.timer += dt;
     if (this.timer < this.config.world.inspectSeconds) return;
     this.timer = 0;
-    const productId = this.list.shift();
+    const productId = this.list[0];
     const shelf = this.targetShelf;
     const product = game.state.products[productId];
-    if (!shelf || shelf.stock <= 0) return this.fail(game, "empty");
+    if (!shelf || shelf.stock <= 0) {
+      if (this.chooseStockedShelf(game.state, game.blocked)) {
+        this.state = "shopping";
+        this.bubble = "cart";
+        return;
+      }
+      return this.fail(game, "empty");
+    }
     if (product.basePrice > product.basePriceRecommended * this.config.customer.overpriceSoftLimit) return this.fail(game, "price");
     shelf.stock -= 1;
+    this.list.shift();
     this.cart.push(productId);
     this.bubble = "cart";
     if (shelf.stock === 0 && !game.state.stockWarnings[productId]) {
@@ -144,11 +152,42 @@ export class Customer {
   }
 
   chooseNextShelf(state, blocked) {
+    return this.chooseShelf(state, blocked, false);
+  }
+
+  chooseStockedShelf(state, blocked) {
+    return this.chooseShelf(state, blocked, true);
+  }
+
+  chooseShelf(state, blocked, requireStock) {
     const productId = this.list[0];
-    this.targetShelf = state.shelves.find((shelf) => shelf.productId === productId);
-    const options = adjacentOpenTiles(this.targetShelf, blocked, this.config);
-    const goal = options.length ? choice(options) : { x: this.targetShelf.x - 1, y: this.targetShelf.y };
-    this.pathTo(goal, { blocked });
+    const candidate = this.findShelfCandidate(productId, state, blocked, requireStock);
+    if (!candidate) {
+      this.targetShelf = null;
+      this.path = [];
+      return false;
+    }
+    this.targetShelf = candidate.shelf;
+    this.path = candidate.path;
+    return true;
+  }
+
+  findShelfCandidate(productId, state, blocked, requireStock) {
+    const start = tileAt(this, this.config.tile);
+    return state.shelves
+      .filter((shelf) => shelf.productId === productId && (!requireStock || shelf.stock > 0))
+      .flatMap((shelf) => this.reachableShelfGoals(shelf, start, blocked))
+      .sort((a, b) => a.path.length - b.path.length || a.shelf.id - b.shelf.id)[0];
+  }
+
+  reachableShelfGoals(shelf, start, blocked) {
+    return adjacentOpenTiles(shelf, blocked, this.config)
+      .map((goal) => ({ shelf, goal, path: this.findPathToGoal(start, goal, blocked) }))
+      .filter(({ goal, path }) => path.length || (start.x === goal.x && start.y === goal.y));
+  }
+
+  findPathToGoal(start, goal, blocked) {
+    return findPath(start, goal, (tile) => canStand(tile, blocked, this.config), this.config.world.cols, this.config.world.rows);
   }
 
   goQueue(game) {
