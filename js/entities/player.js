@@ -42,71 +42,78 @@ export class Player {
     return this.carry ? base * this.config.player.carryingSpeedFactor : base;
   }
 
-  interact(game) {
+  interactionTarget(game) {
     const { state, config } = game;
     for (const register of config.map.registers) {
       const spot = { x: register.x - 1, y: register.y, w: 1, h: 1 };
-      if (nearbyRect(this, spot, config.tile)) {
-        this.checkout(game, register);
-        return;
+      if (nearbyRect(this, spot, config.tile) && state.customers.some((person) => person.state === "queue" && person.register === register)) {
+        return { type: "checkout", label: "Cobrar cliente", ref: register, rect: spot };
       }
     }
     if (nearbyRect(this, { x: config.map.entrance.x, y: config.map.entrance.y, w: 2, h: 1 }, config.tile)) {
-      game.toggleShop();
-      return;
+      return { type: "shop", label: state.phase === "closed" ? "Abrir tienda" : "Cerrar tienda", rect: { x: config.map.entrance.x, y: config.map.entrance.y, w: 2, h: 1 } };
     }
     const customer = this.nearCustomer(game);
-    if (customer) {
-      game.ui.openCustomerInfo(customer);
-      return;
-    }
-    if (nearbyRect(this, config.map.office, config.tile)) {
-      game.ui.openTerminal();
-      return;
-    }
+    if (customer) return { type: "customer", label: "Ver cliente", ref: customer, x: customer.x, y: customer.y };
+    if (nearbyRect(this, config.map.office, config.tile)) return { type: "office", label: "Abrir terminal", rect: config.map.office };
     for (const recycle of state.recycles) {
-      if (nearbyRect(this, recycle, config.tile) && this.carry?.empty) {
-        this.carry = null;
-        game.toast("Caja reciclada.", "success");
-        return;
-      }
+      if (nearbyRect(this, recycle, config.tile) && this.carry?.empty) return { type: "recycle", label: "Reciclar caja", ref: recycle, rect: recycle };
     }
     const dropped = state.droppedBoxes.find((box) => nearbyRect(this, { ...box, w: 1, h: 1 }, config.tile));
-    if (dropped && !this.carry) {
-      state.droppedBoxes = state.droppedBoxes.filter((box) => box !== dropped);
-      this.carry = { productId: dropped.productId, units: dropped.units, empty: false };
-      game.toast(`Caja recogida: ${state.products[dropped.productId].name}.`, "success");
-      return;
-    }
+    if (dropped && !this.carry) return { type: "droppedBox", label: "Recoger caja", ref: dropped, rect: { ...dropped, w: 1, h: 1 } };
     for (const pallet of state.pallets) {
-      if (nearbyRect(this, { ...pallet, w: 1, h: 1 }, config.tile) && !this.carry && pallet.boxes.length) {
-        const box = pallet.boxes.pop();
-        this.carry = { productId: box.productId, units: this.boxCapacity(), empty: false };
-        game.toast(`Caja de ${state.products[box.productId].name}.`, "success");
-        return;
-      }
-      if (nearbyRect(this, { ...pallet, w: 1, h: 1 }, config.tile) && !this.carry && !pallet.boxes.length) {
-        game.toast("No hay cajas para recoger en ese pale.", "warn");
-        return;
-      }
+      const rect = { ...pallet, w: 1, h: 1 };
+      if (nearbyRect(this, rect, config.tile) && !this.carry && pallet.boxes.length) return { type: "pallet", label: "Recoger caja", ref: pallet, rect };
+      if (nearbyRect(this, rect, config.tile) && !this.carry && !pallet.boxes.length) return { type: "emptyPallet", label: "Pale vacio", ref: pallet, rect };
     }
     for (const shelf of state.shelves) {
       if (!nearbyRect(this, shelf, config.tile)) continue;
-      if (this.carry && !this.carry.empty && this.carry.productId === shelf.productId) {
-        const product = state.products[shelf.productId];
-        if (shelf.stock >= product.shelfCapacity) return game.toast("Estante lleno.", "warn");
-        const amount = Math.min(this.carry.units, product.shelfCapacity - shelf.stock);
-        shelf.stock += amount;
-        state.stockWarnings[shelf.productId] = false;
-        this.carry.units -= amount;
-        if (this.carry.units <= 0) this.carry = { empty: true };
-        game.toast(`Repuesto +${amount} de ${product.name}.`, "success");
-        return;
-      }
-      game.toast("Necesitas la caja correcta.", "warn");
-      return;
+      const product = state.products[shelf.productId];
+      const canRestock = this.carry && !this.carry.empty && this.carry.productId === shelf.productId && shelf.stock < product.shelfCapacity;
+      return { type: "shelf", label: canRestock ? "Reponer estante" : "Estante", ref: shelf, rect: shelf };
     }
-    game.toast("Nada con lo que interactuar cerca.", "warn");
+    return null;
+  }
+
+  interact(game) {
+    const { state } = game;
+    const target = this.interactionTarget(game);
+    if (!target) return game.toast("Nada con lo que interactuar cerca.", "warn");
+    if (target.type === "checkout") return this.checkout(game, target.ref);
+    if (target.type === "shop") return game.toggleShop();
+    if (target.type === "customer") return game.ui.openCustomerInfo(target.ref);
+    if (target.type === "office") return game.ui.openTerminal();
+    if (target.type === "recycle") {
+      this.carry = null;
+      return game.toast("Caja reciclada.", "success");
+    }
+    if (target.type === "droppedBox") {
+      state.droppedBoxes = state.droppedBoxes.filter((box) => box !== target.ref);
+      this.carry = { productId: target.ref.productId, units: target.ref.units, empty: false };
+      return game.toast(`Caja recogida: ${state.products[target.ref.productId].name}.`, "success");
+    }
+    if (target.type === "pallet") {
+      const box = target.ref.boxes.pop();
+      this.carry = { productId: box.productId, units: this.boxCapacity(), empty: false };
+      return game.toast(`Caja de ${state.products[box.productId].name}.`, "success");
+    }
+    if (target.type === "emptyPallet") return game.toast("No hay cajas para recoger en ese pale.", "warn");
+    if (target.type === "shelf") return this.interactShelf(game, target.ref);
+  }
+
+  interactShelf(game, shelf) {
+    const { state } = game;
+    if (this.carry && !this.carry.empty && this.carry.productId === shelf.productId) {
+      const product = state.products[shelf.productId];
+      if (shelf.stock >= product.shelfCapacity) return game.toast("Estante lleno.", "warn");
+      const amount = Math.min(this.carry.units, product.shelfCapacity - shelf.stock);
+      shelf.stock += amount;
+      state.stockWarnings[shelf.productId] = false;
+      this.carry.units -= amount;
+      if (this.carry.units <= 0) this.carry = { empty: true };
+      return game.toast(`Repuesto +${amount} de ${product.name}.`, "success");
+    }
+    return game.toast("Necesitas la caja correcta.", "warn");
   }
 
   checkout(game, register) {
