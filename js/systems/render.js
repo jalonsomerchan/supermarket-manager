@@ -13,18 +13,48 @@ export class Renderer {
     this.ctx.imageSmoothingEnabled = false;
     this.config = config;
     this.assets = assets;
+    this.playerPreview = { x: 0, y: 0, tile: { x: 0, y: 0 } };
+    this.doorRect = { ...config.map.entrance, w: 2, h: 1 };
+    this.ghostShelf = { x: 0, y: 0, w: 1, h: 2, productId: null, stock: 0 };
   }
 
   render(game) {
     const ctx = this.ctx;
     this.currentState = game.state;
-    game.state.playerPreview = { x: game.player.x, y: game.player.y, tile: game.player.facingTile?.() };
+    this.updatePlayerPreview(game.player, game.state);
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.drawMap(game.state);
     this.drawObjects(game.state);
-    const actors = [...game.state.customers, game.player].sort((a, b) => a.y - b.y);
-    actors.forEach((actor) => actor instanceof Object && this.drawActor(actor));
+    this.drawActors(game.state.customers, game.player);
     this.drawBubbles(game.state.customers);
+  }
+
+  updatePlayerPreview(player, state) {
+    const preview = this.playerPreview;
+    const offset = player.dir === "down"
+      ? downOffset
+      : player.dir === "up"
+        ? upOffset
+        : player.dir === "left"
+          ? leftOffset
+          : rightOffset;
+    preview.x = player.x;
+    preview.y = player.y;
+    preview.tile.x = Math.floor(player.x / this.config.tile) + offset.x;
+    preview.tile.y = Math.floor(player.y / this.config.tile) + offset.y;
+    state.playerPreview = preview;
+  }
+
+  drawActors(customers, player) {
+    let playerDrawn = false;
+    for (const customer of customers) {
+      if (!playerDrawn && player.y <= customer.y) {
+        this.drawActor(player);
+        playerDrawn = true;
+      }
+      this.drawActor(customer);
+    }
+    if (!playerDrawn) this.drawActor(player);
   }
 
   drawMap(state) {
@@ -42,7 +72,7 @@ export class Renderer {
       for (const wall of config.map.expansionWalls || []) this.wall(wall);
       this.lockedZone();
     }
-    this.prop(this.assets.images.door, { ...config.map.entrance, w: 2, h: 1 }, 2, 1);
+    this.prop(this.assets.images.door, this.doorRect, 2, 1);
   }
 
   drawObjects(state) {
@@ -56,7 +86,7 @@ export class Renderer {
     }
     for (const [index, pallet] of state.pallets.entries()) {
       if (this.isMoving(state, "pallet", index)) continue;
-      this.prop(this.assets.images.pallet, { ...pallet, w: 1, h: 1 }, 1, 1);
+      this.propTile(this.assets.images.pallet, pallet.x, pallet.y, 1, 1);
       pallet.boxes.forEach((box, index) => this.box(pallet.x, pallet.y - index * 0.28, state.products[box.productId].color));
     }
     for (const box of state.droppedBoxes) this.box(box.x, box.y, state.products[box.productId].color);
@@ -186,8 +216,12 @@ export class Renderer {
   }
 
   prop(image, rect, widthTiles, heightTiles) {
+    this.propTile(image, rect.x, rect.y, widthTiles, heightTiles);
+  }
+
+  propTile(image, x, y, widthTiles, heightTiles) {
     const t = this.config.tile;
-    this.ctx.drawImage(image, rect.x * t, rect.y * t, widthTiles * t, heightTiles * t);
+    this.ctx.drawImage(image, x * t, y * t, widthTiles * t, heightTiles * t);
   }
 
   block(rect, color, label = "") {
@@ -227,13 +261,19 @@ export class Renderer {
     const moving = state.movingObject;
     if (!moving) return;
     const t = this.config.tile;
-    const tile = state.playerPreview?.tile || { x: 0, y: 0 };
+    const tile = state.playerPreview?.tile || this.playerPreview.tile;
     const x = tile.x * t;
     const y = tile.y * t;
     this.placementTile(tile, moving.w, moving.h);
     this.ctx.save();
     this.ctx.globalAlpha = 0.65;
-    if (moving.type === "shelf") this.shelf({ ...moving.ref, x: tile.x, y: tile.y, w: 1, h: 2 }, state.products[moving.ref.productId]);
+    if (moving.type === "shelf") {
+      this.ghostShelf.x = tile.x;
+      this.ghostShelf.y = tile.y;
+      this.ghostShelf.productId = moving.ref.productId;
+      this.ghostShelf.stock = moving.ref.stock;
+      this.shelf(this.ghostShelf, state.products[moving.ref.productId]);
+    }
     if (moving.type === "pallet") this.ctx.drawImage(this.assets.images.pallet, x, y, 32, 32);
     if (moving.type === "register") this.ctx.drawImage(this.assets.images.register, x, y, 64, 32);
     if (moving.type === "office") this.ctx.drawImage(this.assets.images.computer, x, y, 64, 32);
@@ -259,12 +299,18 @@ export class Renderer {
   }
 
   box(x, y, color) {
+    const t = this.config.tile;
     this.ctx.fillStyle = color;
-    this.ctx.fillRect(x * this.config.tile + 7, y * this.config.tile + 7, 18, 18);
-    this.ctx.strokeStyle = "#5c3b24";
-    this.ctx.strokeRect(x * this.config.tile + 7, y * this.config.tile + 7, 18, 18);
+    this.ctx.fillRect(x * t + 7, y * t + 9, 18, 16);
+    this.ctx.strokeStyle = "#4a2b16";
+    this.ctx.strokeRect(x * t + 7, y * t + 9, 18, 16);
   }
 }
+
+const downOffset = { x: 0, y: 1 };
+const upOffset = { x: 0, y: -1 };
+const leftOffset = { x: -1, y: 0 };
+const rightOffset = { x: 1, y: 0 };
 
 function inRects(x, y, rects) {
   return rects.some((rect) => x >= rect.x && y >= rect.y && x < rect.x + rect.w && y < rect.y + rect.h);
