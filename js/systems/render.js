@@ -10,19 +10,35 @@ export class Renderer {
   constructor(canvas, config, assets) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
-    this.ctx.imageSmoothingEnabled = false;
     this.config = config;
     this.assets = assets;
+    this.logicalWidth = Number(canvas.dataset.logicalWidth) || config.world.cols * config.tile;
+    this.logicalHeight = Number(canvas.dataset.logicalHeight) || config.world.rows * config.tile;
+    this.pixelRatio = 0;
     this.playerPreview = { x: 0, y: 0, tile: { x: 0, y: 0 } };
     this.doorRect = { ...config.map.entrance, w: 2, h: 1 };
     this.ghostShelf = { x: 0, y: 0, w: 1, h: 2, productId: null, stock: 0 };
+    this.configureCanvas();
+  }
+
+  configureCanvas() {
+    const ratio = Math.max(1, window.devicePixelRatio || 1);
+    const width = Math.round(this.logicalWidth * ratio);
+    const height = Math.round(this.logicalHeight * ratio);
+    if (this.pixelRatio === ratio && this.canvas.width === width && this.canvas.height === height) return;
+    this.pixelRatio = ratio;
+    this.canvas.width = width;
+    this.canvas.height = height;
+    this.ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    this.ctx.imageSmoothingEnabled = false;
   }
 
   render(game) {
     const ctx = this.ctx;
+    this.configureCanvas();
     this.currentState = game.state;
     this.updatePlayerPreview(game.player, game.state);
-    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    ctx.clearRect(0, 0, this.logicalWidth, this.logicalHeight);
     this.drawMap(game.state);
     this.drawObjects(game.state);
     this.drawActors(game.state.customers, game.player);
@@ -106,8 +122,8 @@ export class Renderer {
       row * s.frameSize,
       s.frameSize,
       s.frameSize,
-      actor.x - 27,
-      actor.y - 48,
+      Math.round(actor.x - 27),
+      Math.round(actor.y - 48),
       54,
       54
     );
@@ -116,15 +132,17 @@ export class Renderer {
 
   drawCarry(actor) {
     const product = actor.carry.productId ? this.currentState?.products[actor.carry.productId] : null;
+    const x = Math.round(actor.x);
+    const y = Math.round(actor.y);
     this.ctx.fillStyle = actor.carry.empty ? "#b38452" : product?.color || "#d19854";
-    this.ctx.fillRect(actor.x - 12, actor.y - 34, 24, 14);
+    this.ctx.fillRect(x - 12, y - 34, 24, 14);
     this.ctx.strokeStyle = "#5c3b24";
-    this.ctx.strokeRect(actor.x - 12, actor.y - 34, 24, 14);
+    this.ctx.strokeRect(x - 12, y - 34, 24, 14);
     if (product) {
       this.ctx.fillStyle = "#201820";
       this.ctx.font = "bold 7px Courier New";
       this.ctx.textAlign = "center";
-      this.ctx.fillText(product.name.slice(0, 4).toUpperCase(), actor.x, actor.y - 24);
+      this.drawText(product.name.slice(0, 4).toUpperCase(), x, y - 24);
     }
   }
 
@@ -156,42 +174,48 @@ export class Renderer {
     ctx.font = "bold 9px Courier New";
     ctx.textAlign = "center";
     this.bubbleIcon(x - width / 2 + 12, top + 10, type);
-    ctx.fillText(text, x + 6, top + 13);
+    this.drawText(text, x + 6, top + 13);
   }
 
   bubbleIcon(x, y, type) {
     const ctx = this.ctx;
+    const ix = Math.round(x);
+    const iy = Math.round(y);
     ctx.fillStyle = type === "empty" || type === "coin" ? "#ef5d60" : "#4aa8ff";
     if (type === "cart") {
-      ctx.fillRect(x - 5, y - 3, 9, 5);
+      ctx.fillRect(ix - 5, iy - 3, 9, 5);
       ctx.fillStyle = "#201820";
-      ctx.fillRect(x - 3, y + 3, 2, 2);
-      ctx.fillRect(x + 3, y + 3, 2, 2);
+      ctx.fillRect(ix - 3, iy + 3, 2, 2);
+      ctx.fillRect(ix + 3, iy + 3, 2, 2);
     } else if (type === "hourglass") {
-      ctx.fillRect(x - 4, y - 5, 8, 2);
-      ctx.fillRect(x - 4, y + 3, 8, 2);
-      ctx.fillRect(x - 1, y - 2, 2, 4);
+      ctx.fillRect(ix - 4, iy - 5, 8, 2);
+      ctx.fillRect(ix - 4, iy + 3, 8, 2);
+      ctx.fillRect(ix - 1, iy - 2, 2, 4);
     } else {
-      ctx.fillRect(x - 4, y - 4, 8, 8);
+      ctx.fillRect(ix - 4, iy - 4, 8, 8);
       ctx.fillStyle = "#fff6dc";
-      ctx.fillRect(x - 1, y - 3, 2, 6);
+      ctx.fillRect(ix - 1, iy - 3, 2, 6);
     }
   }
 
   patience(customer) {
     const ratio = clamp(customer.timer / this.config.world.queuePatienceSeconds, 0, 1);
+    const x = Math.round(customer.x);
+    const y = Math.round(customer.y);
     this.ctx.fillStyle = "#2b1d24";
-    this.ctx.fillRect(customer.x - 18, customer.y - 66, 36, 5);
+    this.ctx.fillRect(x - 18, y - 66, 36, 5);
     this.ctx.fillStyle = ratio < 0.3 ? "#ef5d60" : "#5ec66b";
-    this.ctx.fillRect(customer.x - 18, customer.y - 66, 36 * ratio, 5);
+    this.ctx.fillRect(x - 18, y - 66, Math.round(36 * ratio), 5);
   }
 
   checkoutProgress(customer) {
     const ratio = clamp(customer.timer / customer.checkoutDuration, 0, 1);
+    const x = Math.round(customer.x);
+    const y = Math.round(customer.y);
     this.ctx.fillStyle = "#2b1d24";
-    this.ctx.fillRect(customer.x - 22, customer.y - 76, 44, 5);
+    this.ctx.fillRect(x - 22, y - 76, 44, 5);
     this.ctx.fillStyle = "#4aa8ff";
-    this.ctx.fillRect(customer.x - 22, customer.y - 76, 44 * ratio, 5);
+    this.ctx.fillRect(x - 22, y - 76, Math.round(44 * ratio), 5);
   }
 
   shelf(shelf, product) {
@@ -200,9 +224,9 @@ export class Renderer {
     const color = ratio <= 0 ? "#555" : product.color;
     const rows = Math.ceil(ratio * 4);
     for (let i = 0; i < rows; i++) {
-      const y = shelf.y * this.config.tile + 8 + i * 11;
+      const y = Math.round(shelf.y * this.config.tile + 8 + i * 11);
       for (let pack = 0; pack < 4; pack++) {
-        const x = shelf.x * this.config.tile + 6 + pack * 5;
+        const x = Math.round(shelf.x * this.config.tile + 6 + pack * 5);
         this.ctx.fillStyle = color;
         this.ctx.fillRect(x, y, 4, 6);
         this.ctx.fillStyle = "#fff6dc";
@@ -212,7 +236,7 @@ export class Renderer {
       }
     }
     this.ctx.fillStyle = ratio === 0 ? "#ef5d60" : ratio < 0.3 ? "#f7c948" : "#5ec66b";
-    this.ctx.fillRect(shelf.x * this.config.tile + 3, (shelf.y + shelf.h) * this.config.tile - 7, 26 * ratio, 4);
+    this.ctx.fillRect(shelf.x * this.config.tile + 3, (shelf.y + shelf.h) * this.config.tile - 7, Math.round(26 * ratio), 4);
   }
 
   prop(image, rect, widthTiles, heightTiles) {
@@ -221,7 +245,7 @@ export class Renderer {
 
   propTile(image, x, y, widthTiles, heightTiles) {
     const t = this.config.tile;
-    this.ctx.drawImage(image, x * t, y * t, widthTiles * t, heightTiles * t);
+    this.ctx.drawImage(image, Math.round(x * t), Math.round(y * t), widthTiles * t, heightTiles * t);
   }
 
   block(rect, color, label = "") {
@@ -235,7 +259,7 @@ export class Renderer {
       this.ctx.fillStyle = "#fff6dc";
       this.ctx.font = "14px Courier New";
       this.ctx.textAlign = "center";
-      this.ctx.fillText(label, (rect.x + rect.w / 2) * t, (rect.y + rect.h / 2) * t + 5);
+      this.drawText(label, (rect.x + rect.w / 2) * t, (rect.y + rect.h / 2) * t + 5);
     }
   }
 
@@ -300,10 +324,16 @@ export class Renderer {
 
   box(x, y, color) {
     const t = this.config.tile;
+    const left = Math.round(x * t + 7);
+    const top = Math.round(y * t + 9);
     this.ctx.fillStyle = color;
-    this.ctx.fillRect(x * t + 7, y * t + 9, 18, 16);
+    this.ctx.fillRect(left, top, 18, 16);
     this.ctx.strokeStyle = "#4a2b16";
-    this.ctx.strokeRect(x * t + 7, y * t + 9, 18, 16);
+    this.ctx.strokeRect(left, top, 18, 16);
+  }
+
+  drawText(text, x, y) {
+    this.ctx.fillText(text, Math.round(x), Math.round(y));
   }
 }
 
