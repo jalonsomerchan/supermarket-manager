@@ -44,6 +44,7 @@ export class Game {
   update(dt) {
     this.blocked = buildBlocked(this.config, this.state);
     this.player.syncUpgrades(this.state.upgrades);
+    this.state.placementPreviewValid = this.state.movingObject ? this.player.canPlacePreview(this) : true;
     this.interactionTarget = this.state.paused ? null : this.player.interactionTarget(this);
     if (this.state.checkoutSummaryOpen && this.input.consumeAction()) {
       this.ui.closeModal();
@@ -137,41 +138,17 @@ export class Game {
     this.toast("Partida importada.", "success");
   }
 
-  saveToLocal() {
-    saveLocal(this);
-    this.toast("Partida guardada en localStorage.", "success");
-  }
-
-  saveToFile() {
-    const blob = new Blob([saveGame(this)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `supermarket-manager-dia-${this.state.day}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-    this.toast("Archivo de guardado generado.", "success");
-  }
-
-  exitToTitle() {
-    this.state.paused = true;
-    this.state.started = false;
-    this.interactionTarget = null;
-    this.ui.openStartScreen(hasLocalSave());
-  }
-
   toggleShop() {
     if (this.state.phase === "closed") {
       this.state.phase = "open";
+      this.state.paused = false;
       this.toast("Tienda abierta.", "success");
       return;
     }
     if (this.state.phase === "open") {
       this.state.phase = "closing";
-      this.toast("Tienda cerrada: no entran mas clientes.", "warn");
-      return;
+      this.toast("Cerrando: atiende a los clientes restantes.", "warn");
     }
-    this.toast("La tienda ya esta en cierre.", "warn");
   }
 
   updateClosedReputation(dt) {
@@ -181,11 +158,27 @@ export class Game {
     this.state.closedPenaltyTimer += dt;
     if (this.state.closedPenaltyTimer < this.config.world.closedReputationPenaltySeconds) return;
     this.state.closedPenaltyTimer = 0;
-    addReputation(this.state, -5, this.config);
-    this.toast("La reputacion baja por abrir tarde.", "warn");
+    addReputation(this.state, -3, this.config);
+    this.toast("La clientela pierde interes: abre pronto.", "warn");
+  }
+
+  exitToTitle() {
+    this.state.paused = true;
+    this.state.started = false;
+    this.interactionTarget = null;
+    this.ui.openStartScreen(hasLocalSave());
   }
 
   toast(text, type = "info") {
-    this.ui.toast(text, type);
+    this.state.messages.push({ text, type });
+  }
+
+  save() {
+    saveLocal(this);
+    this.toast("Partida guardada.", "success");
+  }
+
+  exportSave() {
+    return saveGame(this);
   }
 }
