@@ -309,6 +309,92 @@ canvas {
   background: #120f18aa;
 }
 
+.terminal-hint,
+.terminal-intro p,
+.terminal-note {
+  margin: 4px 0 0;
+  color: #d8d0b8;
+  line-height: 1.35;
+}
+
+.terminal-card-wrap .controls {
+  margin-bottom: 12px;
+}
+
+.terminal-grid {
+  gap: 10px;
+}
+
+.terminal-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #f8f1d233;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #30283e, #211b2b);
+}
+
+.terminal-card.warn { border-color: #f7c94899; }
+.terminal-card.locked { opacity: .76; }
+.terminal-card.owned { border-color: #5ec66b99; }
+
+.terminal-card h3 {
+  margin: 0 0 8px;
+  color: #9de7ff;
+  font-size: 16px;
+}
+
+.terminal-card-main {
+  min-width: 0;
+}
+
+.terminal-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
+  gap: 6px;
+}
+
+.metric {
+  display: grid;
+  gap: 2px;
+  padding: 7px 8px;
+  border: 1px solid #f8f1d222;
+  border-radius: 10px;
+  background: #120f1890;
+}
+
+.metric small {
+  color: #9de7ff;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.metric strong {
+  color: var(--paper);
+  font-size: 13px;
+}
+
+.metric.good strong,
+.terminal-note.good { color: var(--green); }
+.metric.bad strong,
+.terminal-note.bad { color: var(--red); }
+.metric.gold strong { color: var(--gold); }
+
+.price-actions {
+  display: inline-flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .menu-stack {
   display: grid;
   gap: 10px;
@@ -355,5 +441,17 @@ canvas {
   canvas {
     width: 100%;
     max-height: 68vh;
+  }
+  .terminal-card {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+  .terminal-actions,
+  .price-actions {
+    justify-content: stretch;
+  }
+  .terminal-actions .pixel-btn,
+  .price-actions .pixel-btn {
+    flex: 1;
   }
 }
