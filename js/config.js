@@ -46,13 +46,13 @@ export const CONFIG = {
   map: {
     entrance: { x: 9, y: 14 },
     exit: { x: 10, y: 14 },
-    office: { x: 2, y: 2, w: 2, h: 1 },
-    recycle: { x: 17, y: 2, w: 1, h: 1 },
-    pallets: [{ x: 15, y: 3 }, { x: 16, y: 3 }],
-    registers: [{ x: 10, y: 11, w: 2, h: 1, queue: [{ x: 12, y: 11 }, { x: 13, y: 11 }, { x: 13, y: 10 }] }],
+    office: { x: 6, y: 6, w: 2, h: 1 },
+    recycle: { x: 11, y: 6, w: 1, h: 1 },
+    pallets: [{ x: 11, y: 5 }],
+    registers: [{ x: 8, y: 11, w: 2, h: 1, queue: [{ x: 10, y: 11 }, { x: 11, y: 11 }, { x: 11, y: 10 }] }],
     shelves: [
-      { id: "shelf-bread", x: 5, y: 5, w: 1, h: 2, productId: "bread" },
-      { id: "shelf-milk", x: 8, y: 5, w: 1, h: 2, productId: "milk" }
+      { id: "shelf-bread", x: 6, y: 9, w: 1, h: 2, productId: "bread" },
+      { id: "shelf-milk", x: 10, y: 9, w: 1, h: 2, productId: "milk" }
     ],
     walls: [
       { x: 0, y: 0, w: 20, h: 1 },
@@ -60,11 +60,22 @@ export const CONFIG = {
       { x: 19, y: 0, w: 1, h: 15 },
       { x: 0, y: 14, w: 9, h: 1 },
       { x: 11, y: 14, w: 8, h: 1 },
-      { x: 0, y: 4, w: 2, h: 1 },
-      { x: 4, y: 4, w: 16, h: 1 }
+      { x: 0, y: 4, w: 6, h: 1 },
+      { x: 8, y: 4, w: 12, h: 1 }
     ],
-    warehouseTiles: [{ x: 1, y: 1, w: 18, h: 3 }],
-    expansionWalls: [{ x: 14, y: 4, w: 1, h: 10 }]
+    warehouseTiles: [{ x: 6, y: 5, w: 7, h: 2 }],
+    expansionWalls: [
+      { x: 1, y: 1, w: 18, h: 3 },
+      { x: 1, y: 5, w: 5, h: 9 },
+      { x: 13, y: 5, w: 6, h: 9 },
+      { x: 6, y: 7, w: 1, h: 1 },
+      { x: 12, y: 7, w: 1, h: 1 }
+    ],
+    lockedZones: [
+      { x: 1, y: 1, w: 18, h: 3 },
+      { x: 1, y: 5, w: 5, h: 9 },
+      { x: 13, y: 5, w: 6, h: 9 }
+    ]
   },
   products: {
     bread: { name: "Pan de Molde", lot: 10, boxCost: 10, basePrice: 2.5, shelfCapacity: 12, license: "basic", color: "#d99b48" },
@@ -84,7 +95,7 @@ export const CONFIG = {
     shoes: { name: "Zapatillas de Correr", cost: 300, desc: "+20% velocidad" },
     scanner: { name: "Escaner Laser", cost: 500, desc: "Cobro al doble de velocidad" },
     strong: { name: "Fuerza Hercules", cost: 750, desc: "Carga 2 cajas" },
-    expansion1: { name: "Ampliacion Local Fase 1", cost: 900, desc: "Abre la zona derecha de la tienda" }
+    expansion1: { name: "Ampliacion Local Fase 1", cost: 900, desc: "Abre el resto del local y del almacen" }
   },
   furniture: {
     shelf: { name: "Estanteria", cost: 120, w: 1, h: 2 },
@@ -92,7 +103,7 @@ export const CONFIG = {
     recycle: { name: "Papelera reciclaje", cost: 70, w: 1, h: 1 }
   },
   player: {
-    start: { x: 3, y: 10 },
+    start: { x: 7, y: 12 },
     speed: 150,
     carryingSpeedFactor: 0.9,
     boxCapacity: 5

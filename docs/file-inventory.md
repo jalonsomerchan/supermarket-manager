@@ -28,7 +28,7 @@ Este documento resume los ficheros actuales del repositorio y la utilidad princi
 | Fichero | Utilidad |
 | --- | --- |
 | `js/main.js` | Punto de arranque JavaScript. Importa la configuración y la clase `Game`, ajusta el tamaño del canvas según el mapa configurado, instancia el juego y llama a `game.start()`. |
-| `js/config.js` | Configuración central del juego. Contiene tamaños, mundo, controles, rutas de sprites, mapa, productos, licencias, mejoras, parámetros de jugador y clientes. Es la fuente principal de datos ajustables. |
+| `js/config.js` | Configuración central del juego. Contiene tamaños, mundo, controles, rutas de sprites, mapa compacto inicial, zonas bloqueadas de expansión, productos, licencias, mejoras, parámetros de jugador y clientes. Es la fuente principal de datos ajustables. |
 | `js/game.js` | Orquestador principal del juego. Crea assets, input, estado, jugador, UI y renderer; controla el bucle de actualización/renderizado, cambios de fase, clientes, reputación, guardado/carga y cierre de día. |
 | `js/assets.js` | Cargador de imágenes. Recorre los sprites definidos en `CONFIG`, crea objetos `Image`, espera a su carga y los deja disponibles para el renderer. |
 | `js/input.js` | Gestión de entrada de usuario. Centraliza teclado y controles táctiles, expone acciones consumibles y vector de movimiento, y traduce teclas configuradas a acciones de juego. |
@@ -45,11 +45,11 @@ Este documento resume los ficheros actuales del repositorio y la utilidad princi
 
 | Fichero | Utilidad |
 | --- | --- |
-| `js/systems/render.js` | Sistema de renderizado sobre canvas. Dibuja mapa, paredes, puertas, objetos, cajas, estantes, personajes, burbujas y estados visuales usando sprites y formas simples. |
+| `js/systems/render.js` | Sistema de renderizado sobre canvas. Dibuja mapa, paredes, puertas, zonas bloqueadas por expansión, objetos, cajas, estantes, personajes, burbujas y estados visuales usando sprites y formas simples. |
 | `js/systems/world.js` | Utilidades del mundo y colisiones. Calcula casillas bloqueadas, posiciones de tiles, zonas cercanas e identificadores de casillas adyacentes transitables. |
 | `js/systems/orders.js` | Sistema de pedidos y entregas. Permite comprar mercancía, descuenta dinero/costes, gestiona temporizadores de entrega y coloca cajas en palés libres o reintenta si no hay hueco. |
 | `js/systems/economy.js` | Sistema económico. Gestiona productos desbloqueados, compra de licencias y mejoras, cambios de precio y progresión de reputación. |
-| `js/systems/save.js` | Persistencia de partida. Serializa el estado, jugador y parte del mapa; guarda/carga en `localStorage`; restaura una partida combinándola con un estado base actualizado. |
+| `js/systems/save.js` | Persistencia de partida. Serializa el estado, jugador y parte del mapa; guarda/carga en `localStorage`; restaura una partida combinándola con un estado base actualizado y migra guardados antiguos al layout compacto cuando procede. |
 
 ## Interfaz
 

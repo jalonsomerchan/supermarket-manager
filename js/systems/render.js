@@ -86,7 +86,7 @@ export class Renderer {
     for (const wall of config.map.walls) this.wall(wall);
     if (!state.expansionLevel) {
       for (const wall of config.map.expansionWalls || []) this.wall(wall);
-      this.lockedZone();
+      this.lockedZones(config.map.lockedZones || config.map.expansionWalls || []);
     }
     this.prop(this.assets.images.door, this.doorRect, 2, 1);
   }
@@ -272,12 +272,12 @@ export class Renderer {
     }
   }
 
-  lockedZone() {
+  lockedZones(zones) {
     const t = this.config.tile;
     this.ctx.save();
     this.ctx.globalAlpha = 0.28;
     this.ctx.fillStyle = "#07050a";
-    this.ctx.fillRect(14 * t, 4 * t, 5 * t, 10 * t);
+    for (const zone of zones) this.ctx.fillRect(zone.x * t, zone.y * t, zone.w * t, zone.h * t);
     this.ctx.restore();
   }
 
