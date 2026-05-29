@@ -91,7 +91,21 @@ export class Game {
 
   maybeFinishDay() {
     if (this.state.phase !== "closing" || this.state.customers.length || this.state.reportOpen) return;
+    this.applyDailyProfitFee();
     this.ui.openReport();
+  }
+
+  applyDailyProfitFee() {
+    const rate = this.config.world.dailyProfitFeeRate;
+    const profit = this.state.gross - this.state.costs;
+    this.state.dailyProfitFeeRate = rate;
+    if (this.state.dailyProfitFeeApplied) return;
+    this.state.dailyProfitFee = profit > 0 ? Number((profit * rate).toFixed(2)) : 0;
+    if (this.state.dailyProfitFee > 0) {
+      this.state.costs += this.state.dailyProfitFee;
+      this.state.money -= this.state.dailyProfitFee;
+    }
+    this.state.dailyProfitFeeApplied = true;
   }
 
   nextDay() {
@@ -105,6 +119,9 @@ export class Game {
     this.state.reportOpen = false;
     this.state.gross = 0;
     this.state.costs = 0;
+    this.state.dailyProfitFee = 0;
+    this.state.dailyProfitFeeRate = this.config.world.dailyProfitFeeRate;
+    this.state.dailyProfitFeeApplied = false;
     this.state.served = 0;
     this.state.lost = 0;
     this.player.carry = carry?.empty ? null : carry;
