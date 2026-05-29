@@ -126,32 +126,29 @@ export class Renderer {
     const w = rect.w * t;
     const h = rect.h * t;
     this.ctx.save();
-    this.ctx.globalAlpha = 0.2;
+    this.ctx.globalAlpha = 0.08;
     this.ctx.fillStyle = "#f7c948";
-    this.ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
-    this.ctx.globalAlpha = 1;
+    this.ctx.fillRect(x + 4, y + 4, w - 8, h - 8);
+    this.ctx.globalAlpha = 0.75;
     this.ctx.strokeStyle = "#fff6dc";
-    this.ctx.lineWidth = 3;
-    this.ctx.strokeRect(x + 3, y + 3, w - 6, h - 6);
-    this.ctx.strokeStyle = "#f7c948";
-    this.ctx.lineWidth = 1;
-    this.ctx.strokeRect(x + 7, y + 7, w - 14, h - 14);
+    this.ctx.lineWidth = 2;
+    this.ctx.strokeRect(x + 5, y + 5, w - 10, h - 10);
     this.drawTargetLabel(label, x + w / 2, y - 4);
     this.ctx.restore();
   }
 
   highlightPoint(x, y, label) {
     this.ctx.save();
-    this.ctx.globalAlpha = 0.24;
+    this.ctx.globalAlpha = 0.1;
     this.ctx.fillStyle = "#f7c948";
     this.ctx.beginPath();
-    this.ctx.ellipse(Math.round(x), Math.round(y) - 8, 24, 30, 0, 0, Math.PI * 2);
+    this.ctx.ellipse(Math.round(x), Math.round(y) - 8, 18, 24, 0, 0, Math.PI * 2);
     this.ctx.fill();
-    this.ctx.globalAlpha = 1;
+    this.ctx.globalAlpha = 0.75;
     this.ctx.strokeStyle = "#fff6dc";
-    this.ctx.lineWidth = 3;
+    this.ctx.lineWidth = 2;
     this.ctx.stroke();
-    this.drawTargetLabel(label, x, y - 58);
+    this.drawTargetLabel(label, x, y - 50);
     this.ctx.restore();
   }
 
@@ -346,9 +343,10 @@ export class Renderer {
     const tile = state.playerPreview?.tile || this.playerPreview.tile;
     const x = tile.x * t;
     const y = tile.y * t;
-    this.placementTile(tile, moving.w, moving.h);
+    const isValid = state.placementPreviewValid !== false;
+    this.placementTile(tile, moving.w, moving.h, isValid);
     this.ctx.save();
-    this.ctx.globalAlpha = 0.65;
+    this.ctx.globalAlpha = isValid ? 0.65 : 0.38;
     if (moving.type === "shelf") {
       this.ghostShelf.x = tile.x;
       this.ghostShelf.y = tile.y;
@@ -363,14 +361,14 @@ export class Renderer {
     this.ctx.restore();
   }
 
-  placementTile(tile, w, h) {
+  placementTile(tile, w, h, isValid = true) {
     const t = this.config.tile;
     this.ctx.save();
-    this.ctx.globalAlpha = 0.35;
-    this.ctx.fillStyle = "#4aa8ff";
+    this.ctx.globalAlpha = isValid ? 0.28 : 0.42;
+    this.ctx.fillStyle = isValid ? "#4aa8ff" : "#ef5d60";
     this.ctx.fillRect(tile.x * t, tile.y * t, w * t, h * t);
     this.ctx.globalAlpha = 1;
-    this.ctx.strokeStyle = "#fff6dc";
+    this.ctx.strokeStyle = isValid ? "#fff6dc" : "#ffd6d6";
     this.ctx.lineWidth = 2;
     this.ctx.strokeRect(tile.x * t + 2, tile.y * t + 2, w * t - 4, h * t - 4);
     this.ctx.restore();
