@@ -325,12 +325,17 @@ export class UI {
   }
 
   openReport() {
-    const { state } = this.game;
+    const { state, config } = this.game;
     state.paused = true;
     state.reportOpen = true;
+    const fee = state.dailyProfitFee || 0;
+    const rate = state.dailyProfitFeeRate ?? config.world.dailyProfitFeeRate;
+    const operatingCosts = state.costs - fee;
+    const profitBeforeFee = state.gross - operatingCosts;
     const net = state.gross - state.costs;
+    const rateLabel = `${Math.round(rate * 100)}%`;
     this.modal.classList.remove("hidden");
-    this.modal.innerHTML = `<article class="modal-card"><h1>Informe de Ganancias</h1><p>Ingresos brutos: <span class="good">${money(state.gross)}</span></p><p>Gastos de operacion: <span class="bad">${money(state.costs)}</span></p><p>Clientes satisfechos: ${state.served}</p><p>Clientes perdidos: ${state.lost}</p><p>Balance neto: <strong class="${net >= 0 ? "good" : "bad"}">${money(net)}</strong></p><button class="pixel-btn" data-next-day="true">Abrir siguiente dia</button></article>`;
+    this.modal.innerHTML = `<article class="modal-card"><h1>Informe de Ganancias</h1><p>Ingresos brutos: <span class="good">${money(state.gross)}</span></p><p>Gastos de operacion: <span class="bad">${money(operatingCosts)}</span></p><p>Beneficio antes de porcentaje: <strong class="${profitBeforeFee >= 0 ? "good" : "bad"}">${money(profitBeforeFee)}</strong></p><p>Porcentaje sobre beneficio (${rateLabel}): <span class="${fee > 0 ? "bad" : "good"}">${money(fee)}</span></p><p>Clientes satisfechos: ${state.served}</p><p>Clientes perdidos: ${state.lost}</p><p>Balance neto: <strong class="${net >= 0 ? "good" : "bad"}">${money(net)}</strong></p><button class="pixel-btn" data-next-day="true">Abrir siguiente dia</button></article>`;
     this.modal.onclick = (event) => {
       if (event.target?.dataset?.nextDay) this.game.nextDay();
     };

@@ -18,7 +18,8 @@ export const CONFIG = {
     reputationPerLevel: 80,
     maxCustomers: 8,
     closedGraceSeconds: 45,
-    closedReputationPenaltySeconds: 25
+    closedReputationPenaltySeconds: 25,
+    dailyProfitFeeRate: 0.05
   },
   controls: {
     actionKeys: ["e", " ", "Enter"],
