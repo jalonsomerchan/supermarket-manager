@@ -344,7 +344,10 @@ export class UI {
   }
 
   flushMessages() {
-    while (this.game.state.messages.length) this.toast(this.game.state.messages.shift().text, this.game.state.messages.shift()?.type);
+    while (this.game.state.messages.length) {
+      const message = this.game.state.messages.shift();
+      this.toast(message.text, message.type);
+    }
     for (const snack of this.snacks) snack.ttl -= 1 / 60;
     this.snacks = this.snacks.filter((snack) => snack.ttl > 0).slice(-4);
   }
