@@ -1,0 +1,7 @@
+{
+  "type": "module",
+  "scripts": {
+    "serve": "python3 -m http.server 8092",
+    "check": "find js -name '*.js' -print0 | xargs -0 -n1 node --check"
+  }
+}

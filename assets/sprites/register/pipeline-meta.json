@@ -1,0 +1,11 @@
+{
+  "target": "asset",
+  "mode": "single",
+  "prompt": "Single top-down pixel art supermarket checkout register prop on solid magenta background.",
+  "role": "",
+  "input": "/Users/jorgealonso/.codex/generated_images/019e729d-d92d-7e50-b266-e87a24034d39/ig_0ed7bc31139772a0016a19438443c48191a1e36eb00c0974e5.png",
+  "threshold": 100,
+  "edge_threshold": 150,
+  "duration": 200,
+  "single_size": 128
+}
