@@ -21,6 +21,7 @@ export class Game {
     this.ui = new UI(this);
     this.spawnTimer = 2;
     this.last = 0;
+    this.interactionTarget = null;
   }
 
   async start() {
@@ -43,6 +44,7 @@ export class Game {
   update(dt) {
     this.blocked = buildBlocked(this.config, this.state);
     this.player.syncUpgrades(this.state.upgrades);
+    this.interactionTarget = this.state.paused ? null : this.player.interactionTarget(this);
     if (this.state.checkoutSummaryOpen && this.input.consumeAction()) {
       this.ui.closeModal();
       return;
@@ -70,6 +72,7 @@ export class Game {
     updateOrders(this.state, dt);
     this.player.update(dt, this.input, this.blocked);
     this.updateCustomers(dt);
+    this.interactionTarget = this.player.interactionTarget(this);
     this.maybeFinishDay();
   }
 
@@ -113,6 +116,7 @@ export class Game {
     this.state.started = true;
     this.state.paused = false;
     this.player = new Player(this.config);
+    this.interactionTarget = null;
     this.ui.closeModal();
     this.toast("Nueva partida iniciada. Pulsa O para abrir.", "success");
   }
@@ -120,6 +124,7 @@ export class Game {
   continueGame() {
     if (!loadLocal(this)) return this.toast("No hay partida guardada.", "warn");
     this.state.started = true;
+    this.interactionTarget = null;
     this.ui.closeModal();
     this.toast("Partida cargada.", "success");
   }
@@ -127,6 +132,7 @@ export class Game {
   loadFromJson(text) {
     loadGame(this, text);
     this.state.started = true;
+    this.interactionTarget = null;
     this.ui.closeModal();
     this.toast("Partida importada.", "success");
   }
@@ -150,6 +156,7 @@ export class Game {
   exitToTitle() {
     this.state.paused = true;
     this.state.started = false;
+    this.interactionTarget = null;
     this.ui.openStartScreen(hasLocalSave());
   }
 
