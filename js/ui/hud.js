@@ -305,8 +305,11 @@ export class UI {
     state.checkoutSummaryOpen = true;
     const counts = cart.reduce((acc, id) => ({ ...acc, [id]: (acc[id] || 0) + 1 }), {});
     const lines = Object.entries(counts).map(([id, qty]) => `<div class="row"><span>${state.products[id].name} x${qty}</span><strong>${money(state.products[id].basePrice * qty)}</strong></div>`).join("");
+    const cost = cart.reduce((sum, id) => sum + state.products[id].boxCost / state.products[id].lot, 0);
+    const profit = total - cost;
+    const profitRate = total > 0 ? Math.round(profit / total * 100) : 0;
     this.modal.classList.remove("hidden");
-    this.modal.innerHTML = `<article class="modal-card"><h1>Ticket de compra</h1><div class="grid-list">${lines}</div><p>Total cobrado: <strong class="good">${money(total)}</strong></p><p class="gold">Pulsa la tecla de accion para cerrar.</p></article>`;
+    this.modal.innerHTML = `<article class="modal-card"><h1>Ticket de compra</h1><div class="grid-list">${lines}</div><p>Total cobrado: <strong class="good">${money(total)}</strong></p><p>Ganancia estimada: <strong class="${profit >= 0 ? "good" : "bad"}">${money(profit)} (${profitRate}%)</strong></p><p class="gold">Pulsa la tecla de accion para cerrar.</p></article>`;
     this.modal.onclick = null;
     this.bindModalKeys();
     this.toast(`Compra cobrada: ${money(total)}`, "success");

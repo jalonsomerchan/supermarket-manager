@@ -169,9 +169,9 @@ export class Player {
   }
 
   dropObject(game, moving) {
-    const target = this.facingTile();
+    const target = this.placementTarget(game, moving);
+    if (!target) return game.toast("No encuentro un hueco cercano sin bloquear el paso.", "warn");
     const rect = { x: target.x, y: target.y, w: moving.w, h: moving.h };
-    if (!this.canPlace(rect, game)) return game.toast("No puedes soltarlo ahi: bloquea el paso.", "warn");
     moving.ref.x = rect.x;
     moving.ref.y = rect.y;
     if (moving.type === "register") {
@@ -183,14 +183,38 @@ export class Player {
     }
     game.state.movingObject = null;
     game.state.placementPreviewValid = true;
+    game.state.placementPreviewTile = null;
     game.toast(`${moving.name} colocado.`, "success");
   }
 
   canPlacePreview(game) {
     const moving = game.state.movingObject;
     if (!moving) return true;
-    const target = this.facingTile();
-    return this.canPlace({ x: target.x, y: target.y, w: moving.w, h: moving.h }, game);
+    const target = this.placementTarget(game, moving);
+    game.state.placementPreviewTile = target || this.facingTile();
+    return Boolean(target);
+  }
+
+  placementTarget(game, moving) {
+    return this.placementCandidates(moving).find((tile) => this.canPlace({ x: tile.x, y: tile.y, w: moving.w, h: moving.h }, game));
+  }
+
+  placementCandidates(moving) {
+    const tile = this.tile();
+    const forward = this.facingOffset();
+    const side = forward.x ? { x: 0, y: 1 } : { x: 1, y: 0 };
+    const candidates = [];
+    for (let distance = 1; distance <= 3; distance++) {
+      const base = {
+        x: tile.x + forward.x * distance,
+        y: tile.y + forward.y * distance
+      };
+      candidates.push(base);
+      candidates.push({ x: base.x + side.x, y: base.y + side.y });
+      candidates.push({ x: base.x - side.x, y: base.y - side.y });
+    }
+    if (moving.w > 1) candidates.push({ x: tile.x + forward.x, y: tile.y + forward.y - 1 });
+    return uniqueTiles(candidates);
   }
 
   canPlace(rect, game) {
@@ -250,14 +274,18 @@ export class Player {
 
   facingTile() {
     const tile = this.tile();
+    const offset = this.facingOffset();
+    return { x: tile.x + offset.x, y: tile.y + offset.y };
+  }
+
+  facingOffset() {
     const offsets = {
       down: { x: 0, y: 1 },
       up: { x: 0, y: -1 },
       left: { x: -1, y: 0 },
       right: { x: 1, y: 0 }
     };
-    const offset = offsets[this.dir];
-    return { x: tile.x + offset.x, y: tile.y + offset.y };
+    return offsets[this.dir];
   }
 
   boxCapacity() {
@@ -281,4 +309,14 @@ export class Player {
     this.x = point.x;
     this.y = point.y;
   }
+}
+
+function uniqueTiles(tiles) {
+  const seen = new Set();
+  return tiles.filter((tile) => {
+    const key = `${tile.x},${tile.y}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }

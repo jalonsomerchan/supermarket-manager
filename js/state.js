@@ -40,6 +40,7 @@ export function createState(config) {
     messages: [],
     stockWarnings: {},
     movingObject: null,
+    placementPreviewTile: null,
     started: false,
     pauseOpen: false,
     terminalOpen: false,

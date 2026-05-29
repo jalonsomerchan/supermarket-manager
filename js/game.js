@@ -45,6 +45,7 @@ export class Game {
     this.blocked = buildBlocked(this.config, this.state);
     this.player.syncUpgrades(this.state.upgrades);
     this.state.placementPreviewValid = this.state.movingObject ? this.player.canPlacePreview(this) : true;
+    if (!this.state.movingObject) this.state.placementPreviewTile = null;
     this.interactionTarget = this.state.paused ? null : this.player.interactionTarget(this);
     if (this.state.checkoutSummaryOpen && this.input.consumeAction()) {
       this.ui.closeModal();

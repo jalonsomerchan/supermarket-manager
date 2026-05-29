@@ -18,9 +18,8 @@ export class Assets {
         this.images[id] = image;
         resolve();
       };
-      image.onerror = reject;
+      image.onerror = () => reject(new Error(`No se pudo cargar el sprite "${id}" desde ${src}`));
       image.src = src;
     });
   }
 }
-

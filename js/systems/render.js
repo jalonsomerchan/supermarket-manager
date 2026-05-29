@@ -76,18 +76,21 @@ export class Renderer {
 
   drawMap(state) {
     const { ctx, config } = this;
+    ctx.fillStyle = "#07050a";
+    ctx.fillRect(0, 0, this.logicalWidth, this.logicalHeight);
     for (let y = 0; y < config.world.rows; y++) {
       for (let x = 0; x < config.world.cols; x++) {
+        if (!this.isVisibleFloorTile(state, x, y)) continue;
         ctx.fillStyle = inRects(x, y, config.map.warehouseTiles) ? tileColor.warehouse : tileColor.floor;
         ctx.fillRect(x * config.tile, y * config.tile, config.tile, config.tile);
         ctx.strokeStyle = "#b7ab85";
         ctx.strokeRect(x * config.tile, y * config.tile, config.tile, config.tile);
       }
     }
-    for (const wall of config.map.walls) this.wall(wall);
+    for (const wall of config.map.walls) this.wall(wall, state);
     if (!state.expansionLevel) {
-      for (const wall of config.map.expansionWalls || []) this.wall(wall);
       this.lockedZones(config.map.lockedZones || config.map.expansionWalls || []);
+      this.lockedBorders(config.map.lockedZones || config.map.expansionWalls || [], state);
     }
     this.prop(this.assets.images.door, this.doorRect, 2, 1);
   }
@@ -115,56 +118,60 @@ export class Renderer {
 
   drawInteractionTarget(target) {
     if (!target) return;
-    if (target.rect) return this.highlightRect(target.rect, target.label);
-    if (target.x && target.y) return this.highlightPoint(target.x, target.y, target.label);
+    if (target.rect) return this.highlightRect(target);
+    if (target.x && target.y) return this.highlightPoint(target);
   }
 
-  highlightRect(rect, label) {
+  highlightRect(target) {
+    const rect = target.rect;
     const t = this.config.tile;
     const x = rect.x * t;
     const y = rect.y * t;
     const w = rect.w * t;
     const h = rect.h * t;
+    const checkout = target.type === "checkout";
+    this.ctx.save();
+    this.ctx.globalAlpha = checkout ? 0.18 : 0.09;
+    this.ctx.fillStyle = checkout ? "#4aa8ff" : "#f7c948";
+    this.ctx.fillRect(x + 8, y + 8, w - 16, h - 16);
+    this.ctx.globalAlpha = checkout ? 0.8 : 0.55;
+    this.ctx.strokeStyle = checkout ? "#9ed8ff" : "#fff6dc";
+    this.ctx.lineWidth = checkout ? 2 : 1;
+    this.ctx.strokeRect(x + 8.5, y + 8.5, w - 17, h - 17);
+    this.drawTargetLabel(target.label, x + w / 2, y + 2, checkout);
+    this.ctx.restore();
+  }
+
+  highlightPoint(target) {
+    const x = target.x;
+    const y = target.y;
     this.ctx.save();
     this.ctx.globalAlpha = 0.08;
     this.ctx.fillStyle = "#f7c948";
-    this.ctx.fillRect(x + 4, y + 4, w - 8, h - 8);
-    this.ctx.globalAlpha = 0.75;
-    this.ctx.strokeStyle = "#fff6dc";
-    this.ctx.lineWidth = 2;
-    this.ctx.strokeRect(x + 5, y + 5, w - 10, h - 10);
-    this.drawTargetLabel(label, x + w / 2, y - 4);
-    this.ctx.restore();
-  }
-
-  highlightPoint(x, y, label) {
-    this.ctx.save();
-    this.ctx.globalAlpha = 0.1;
-    this.ctx.fillStyle = "#f7c948";
     this.ctx.beginPath();
-    this.ctx.ellipse(Math.round(x), Math.round(y) - 8, 18, 24, 0, 0, Math.PI * 2);
+    this.ctx.ellipse(Math.round(x), Math.round(y) - 8, 13, 18, 0, 0, Math.PI * 2);
     this.ctx.fill();
-    this.ctx.globalAlpha = 0.75;
+    this.ctx.globalAlpha = 0.45;
     this.ctx.strokeStyle = "#fff6dc";
-    this.ctx.lineWidth = 2;
+    this.ctx.lineWidth = 1;
     this.ctx.stroke();
-    this.drawTargetLabel(label, x, y - 50);
+    this.drawTargetLabel(target.label, x, y - 42);
     this.ctx.restore();
   }
 
-  drawTargetLabel(label, x, y) {
-    const width = Math.max(56, label.length * 7 + 16);
-    const left = Math.round(x - width / 2);
-    const top = Math.round(y - 18);
+  drawTargetLabel(label, x, y, checkout = false) {
+    const width = Math.max(checkout ? 50 : 42, label.length * 5 + 12);
+    const left = clamp(Math.round(x - width / 2), 4, this.logicalWidth - width - 4);
+    const top = clamp(Math.round(y - 13), 4, this.logicalHeight - 17);
     this.ctx.fillStyle = "#21192a";
-    this.ctx.fillRect(left, top, width, 18);
-    this.ctx.strokeStyle = "#f7c948";
+    this.ctx.fillRect(left, top, width, 15);
+    this.ctx.strokeStyle = checkout ? "#4aa8ff" : "#f7c948";
     this.ctx.lineWidth = 1;
-    this.ctx.strokeRect(left + 0.5, top + 0.5, width - 1, 17);
+    this.ctx.strokeRect(left + 0.5, top + 0.5, width - 1, 14);
     this.ctx.fillStyle = "#fff6dc";
-    this.ctx.font = "bold 9px Courier New";
+    this.ctx.font = "bold 7px Courier New";
     this.ctx.textAlign = "center";
-    this.drawText(label, x, top + 12);
+    this.drawText(label, left + width / 2, top + 10);
   }
 
   drawActor(actor) {
@@ -328,10 +335,11 @@ export class Renderer {
     }
   }
 
-  wall(rect) {
+  wall(rect, state) {
     const t = this.config.tile;
     for (let y = rect.y; y < rect.y + rect.h; y++) {
       for (let x = rect.x; x < rect.x + rect.w; x++) {
+        if (state && !this.shouldDrawWallTile(state, x, y)) continue;
         this.ctx.drawImage(this.assets.images.wall, x * t, y * t, t, t);
       }
     }
@@ -340,17 +348,47 @@ export class Renderer {
   lockedZones(zones) {
     const t = this.config.tile;
     this.ctx.save();
-    this.ctx.globalAlpha = 0.28;
+    this.ctx.globalAlpha = 0.92;
     this.ctx.fillStyle = "#07050a";
     for (const zone of zones) this.ctx.fillRect(zone.x * t, zone.y * t, zone.w * t, zone.h * t);
     this.ctx.restore();
+  }
+
+  lockedBorders(zones, state) {
+    const t = this.config.tile;
+    for (const zone of zones) {
+      for (let y = zone.y; y < zone.y + zone.h; y++) {
+        for (let x = zone.x; x < zone.x + zone.w; x++) {
+          if (!this.touchesVisibleFloor(state, x, y)) continue;
+          this.ctx.drawImage(this.assets.images.wall, x * t, y * t, t, t);
+        }
+      }
+    }
+  }
+
+  isVisibleFloorTile(state, x, y) {
+    const { config } = this;
+    const insideMap = x > 0 && y > 0 && x < config.world.cols - 1 && y < config.world.rows - 1;
+    return insideMap && !this.isLockedTile(state, x, y) && !inRects(x, y, config.map.walls);
+  }
+
+  isLockedTile(state, x, y) {
+    return !state.expansionLevel && inRects(x, y, this.config.map.lockedZones || this.config.map.expansionWalls || []);
+  }
+
+  shouldDrawWallTile(state, x, y) {
+    return this.touchesVisibleFloor(state, x, y) || inRects(x, y, [this.doorRect]);
+  }
+
+  touchesVisibleFloor(state, x, y) {
+    return neighbors.some((offset) => this.isVisibleFloorTile(state, x + offset.x, y + offset.y));
   }
 
   movingGhost(state) {
     const moving = state.movingObject;
     if (!moving) return;
     const t = this.config.tile;
-    const tile = state.playerPreview?.tile || this.playerPreview.tile;
+    const tile = state.placementPreviewTile || state.playerPreview?.tile || this.playerPreview.tile;
     const x = tile.x * t;
     const y = tile.y * t;
     const isValid = state.placementPreviewValid !== false;
@@ -407,6 +445,7 @@ const downOffset = { x: 0, y: 1 };
 const upOffset = { x: 0, y: -1 };
 const leftOffset = { x: -1, y: 0 };
 const rightOffset = { x: 1, y: 0 };
+const neighbors = [downOffset, upOffset, leftOffset, rightOffset];
 
 function inRects(x, y, rects) {
   return rects.some((rect) => x >= rect.x && y >= rect.y && x < rect.x + rect.w && y < rect.y + rect.h);
