@@ -13,6 +13,7 @@ Antes de modificar páginas, layouts, componentes, estilos, SEO, rutas, i18n, te
 - `docs/i18n-guide.md`
 - `docs/github-pages.md`
 - `docs/testing-guide.md`
+- `docs/file-inventory.md`
 
 ## Prioridad
 
@@ -261,7 +262,7 @@ Todo cambio debe cumplir estos estándares:
 - Sin código muerto, comentarios obsoletos ni pruebas desactivadas sin motivo.
 - Sin hacks frágiles si existe una solución estable.
 - Sin dependencias pesadas para tareas simples.
-- Sin JavaScript de cliente si Astro/HTML/CSS lo resuelve bien.
+- Sin JavaScript de cliente si no aporta valor real.
 - Accesibilidad básica: labels, textos alternativos, foco visible, contraste y estructura semántica.
 - SEO básico: títulos, descripciones, canonical cuando aplique, Open Graph y marcado correcto en layouts.
 - Rendimiento: evitar assets pesados, scripts innecesarios y bloqueos de render.
@@ -281,6 +282,7 @@ La base del proyecto usa:
 
 ## Estructura importante
 
+- `docs/file-inventory.md`: inventario de ficheros actuales y utilidad de cada uno. Debe actualizarse cuando se añadan, eliminen o muevan ficheros relevantes.
 - `astro.config.mjs`: configuración de Astro, `site`, `base`, i18n e integraciones.
 - `src/config/site.ts`: configuración central del sitio e idiomas.
 - `src/i18n/ui.ts`: helpers de traducción y rutas localizadas.
