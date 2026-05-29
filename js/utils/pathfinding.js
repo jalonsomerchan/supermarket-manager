@@ -12,10 +12,10 @@ export function findPath(start, goal, passable, cols, rows) {
   const goalKey = key(goal.x, goal.y);
   const frontier = [start];
   const cameFrom = new Map([[startKey, null]]);
+  let cursor = 0;
 
-  while (frontier.length) {
-    frontier.sort((a, b) => score(a, goal) - score(b, goal));
-    const current = frontier.shift();
+  while (cursor < frontier.length) {
+    const current = frontier[cursor++];
     const currentKey = key(current.x, current.y);
     if (currentKey === goalKey) break;
 
@@ -39,6 +39,3 @@ export function findPath(start, goal, passable, cols, rows) {
   }
   return path.slice(1);
 }
-
-const score = (tile, goal) => Math.abs(tile.x - goal.x) + Math.abs(tile.y - goal.y);
-
