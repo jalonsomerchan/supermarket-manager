@@ -14,6 +14,7 @@ Este documento resume los ficheros actuales del repositorio y la utilidad princi
 
 | Fichero | Utilidad |
 | --- | --- |
+| `.github/workflows/ci.yml` | Workflow de CI para pull requests y ejecución manual. Valida la sintaxis JavaScript con `npm run check` y comprueba que existen los ficheros/carpetas estáticos básicos (`index.html`, `css`, `js`, `assets`) y que `index.html` referencia los assets principales. |
 | `.github/workflows/pages.yml` | Workflow de GitHub Actions para desplegar automáticamente la app estática en GitHub Pages desde `main`. Ejecuta `npm run check`, prepara `dist` con `index.html`, `css`, `js` y `assets`, sube el artefacto y publica con `actions/deploy-pages`. |
 
 ## Estilos
