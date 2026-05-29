@@ -41,6 +41,7 @@ export class Renderer {
     ctx.clearRect(0, 0, this.logicalWidth, this.logicalHeight);
     this.drawMap(game.state);
     this.drawObjects(game.state);
+    this.drawInteractionTarget(game.interactionTarget);
     this.drawActors(game.state.customers, game.player);
     this.drawBubbles(game.state.customers);
   }
@@ -110,6 +111,63 @@ export class Renderer {
       if (!this.isMoving(state, "shelf", shelf.id)) this.shelf(shelf, state.products[shelf.productId]);
     }
     this.movingGhost(state);
+  }
+
+  drawInteractionTarget(target) {
+    if (!target) return;
+    if (target.rect) return this.highlightRect(target.rect, target.label);
+    if (target.x && target.y) return this.highlightPoint(target.x, target.y, target.label);
+  }
+
+  highlightRect(rect, label) {
+    const t = this.config.tile;
+    const x = rect.x * t;
+    const y = rect.y * t;
+    const w = rect.w * t;
+    const h = rect.h * t;
+    this.ctx.save();
+    this.ctx.globalAlpha = 0.2;
+    this.ctx.fillStyle = "#f7c948";
+    this.ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
+    this.ctx.globalAlpha = 1;
+    this.ctx.strokeStyle = "#fff6dc";
+    this.ctx.lineWidth = 3;
+    this.ctx.strokeRect(x + 3, y + 3, w - 6, h - 6);
+    this.ctx.strokeStyle = "#f7c948";
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeRect(x + 7, y + 7, w - 14, h - 14);
+    this.drawTargetLabel(label, x + w / 2, y - 4);
+    this.ctx.restore();
+  }
+
+  highlightPoint(x, y, label) {
+    this.ctx.save();
+    this.ctx.globalAlpha = 0.24;
+    this.ctx.fillStyle = "#f7c948";
+    this.ctx.beginPath();
+    this.ctx.ellipse(Math.round(x), Math.round(y) - 8, 24, 30, 0, 0, Math.PI * 2);
+    this.ctx.fill();
+    this.ctx.globalAlpha = 1;
+    this.ctx.strokeStyle = "#fff6dc";
+    this.ctx.lineWidth = 3;
+    this.ctx.stroke();
+    this.drawTargetLabel(label, x, y - 58);
+    this.ctx.restore();
+  }
+
+  drawTargetLabel(label, x, y) {
+    const width = Math.max(56, label.length * 7 + 16);
+    const left = Math.round(x - width / 2);
+    const top = Math.round(y - 18);
+    this.ctx.fillStyle = "#21192a";
+    this.ctx.fillRect(left, top, width, 18);
+    this.ctx.strokeStyle = "#f7c948";
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeRect(left + 0.5, top + 0.5, width - 1, 17);
+    this.ctx.fillStyle = "#fff6dc";
+    this.ctx.font = "bold 9px Courier New";
+    this.ctx.textAlign = "center";
+    this.drawText(label, x, top + 12);
   }
 
   drawActor(actor) {
