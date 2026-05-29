@@ -1,10 +1,13 @@
 import { createState } from "../state.js";
+import { canStand } from "./world.js";
 
 const KEY = "supermarket-manager-save";
+const SAVE_VERSION = 2;
 
 export function saveGame(game) {
   const state = structuredClone({ ...game.state, movingObject: null, playerPreview: null, paused: false, pauseOpen: false });
   const payload = {
+    version: SAVE_VERSION,
     state,
     player: { x: game.player.x, y: game.player.y, dir: game.player.dir, carry: game.player.carry },
     map: {
@@ -37,5 +40,18 @@ export function loadGame(game, raw) {
     game.config.map.registers.splice(0, game.config.map.registers.length, ...payload.map.registers);
   }
   Object.assign(game.player, payload.player || {});
+  if ((payload.version || 1) < SAVE_VERSION && !game.state.expansionLevel) migrateToCompactLayout(game);
   return true;
+}
+
+function migrateToCompactLayout(game) {
+  const state = game.state;
+  const fallback = createState(game.config);
+  state.shelves = fallback.shelves;
+  state.pallets = fallback.pallets;
+  state.recycles = fallback.recycles;
+  state.droppedBoxes = [];
+  Object.assign(game.config.map.office, { ...game.config.map.office });
+  game.config.map.registers.splice(0, game.config.map.registers.length, ...structuredClone(game.config.map.registers));
+  game.player.warpTo(canStand(game.config.player.start, game.blocked || new Set(), game.config) ? game.config.player.start : { x: 7, y: 12 });
 }
