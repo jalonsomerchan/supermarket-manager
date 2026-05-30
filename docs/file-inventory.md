@@ -49,7 +49,7 @@ Este documento resume los ficheros actuales del repositorio y la utilidad princi
 | `js/systems/world.js` | Utilidades del mundo y colisiones. Calcula casillas bloqueadas, posiciones de tiles, zonas cercanas e identificadores de casillas adyacentes transitables. |
 | `js/systems/orders.js` | Sistema de pedidos y entregas. Permite comprar mercancía, descuenta dinero/costes, gestiona temporizadores de entrega y coloca cajas en palés libres o reintenta si no hay hueco. |
 | `js/systems/economy.js` | Sistema económico. Gestiona productos desbloqueados, compra de licencias y mejoras, cambios de precio y progresión de reputación. |
-| `js/systems/save.js` | Persistencia de partida. Serializa el estado, jugador y parte del mapa; guarda/carga en `localStorage`; restaura una partida combinándola con un estado base actualizado y migra guardados antiguos al layout compacto cuando procede. |
+| `js/systems/save.js` | Persistencia de partida y ajustes locales. Serializa el estado, jugador, parte del mapa y configuración de zoom; guarda/carga en `localStorage`; restaura una partida combinándola con un estado base actualizado y migra guardados antiguos al layout compacto cuando procede. |
 
 ## Interfaz
 
@@ -88,6 +88,30 @@ Este documento resume los ficheros actuales del repositorio y la utilidad princi
 | `assets/sprites/player-box-empty/pipeline-meta.json` | Metadatos de procesado y control de calidad del sprite sheet del jugador con caja vacía. |
 | `assets/sprites/customer/sheet-transparent.png` | Sprite sheet de clientes con animaciones direccionales. |
 | `assets/sprites/customer/prompt-used.txt` | Prompt usado para regenerar el sprite sheet direccional del cliente. |
+| `assets/sprites/customer-student/sheet-transparent.png` | Sprite sheet direccional del cliente estudiante, usado como variante visual y de comportamiento de clientes. |
+| `assets/sprites/customer-student/raw-sheet.png` | Imagen generada original del cliente estudiante antes del procesado. |
+| `assets/sprites/customer-student/raw-sheet-clean.png` | Sprite sheet del cliente estudiante tras limpiar el fondo magenta. |
+| `assets/sprites/customer-student/down-1.png` a `assets/sprites/customer-student/up-4.png` | Frames individuales del cliente estudiante, divididos por dirección y paso. |
+| `assets/sprites/customer-student/down-strip.png`, `left-strip.png`, `right-strip.png`, `up-strip.png` | Tiras direccionales del cliente estudiante para previsualización y depuración. |
+| `assets/sprites/customer-student/down.gif`, `left.gif`, `right.gif`, `up.gif` | GIFs de previsualización de la animación del cliente estudiante. |
+| `assets/sprites/customer-student/prompt-used.txt` | Prompt usado para generar el sprite sheet del cliente estudiante. |
+| `assets/sprites/customer-student/pipeline-meta.json` | Metadatos de procesado y control de calidad del sprite sheet del cliente estudiante. |
+| `assets/sprites/customer-business/sheet-transparent.png` | Sprite sheet direccional del cliente ejecutivo, usado como variante visual y de comportamiento de clientes. |
+| `assets/sprites/customer-business/raw-sheet.png` | Imagen generada original del cliente ejecutivo antes del procesado. |
+| `assets/sprites/customer-business/raw-sheet-clean.png` | Sprite sheet del cliente ejecutivo tras limpiar el fondo magenta. |
+| `assets/sprites/customer-business/down-1.png` a `assets/sprites/customer-business/up-4.png` | Frames individuales del cliente ejecutivo, divididos por dirección y paso. |
+| `assets/sprites/customer-business/down-strip.png`, `left-strip.png`, `right-strip.png`, `up-strip.png` | Tiras direccionales del cliente ejecutivo para previsualización y depuración. |
+| `assets/sprites/customer-business/down.gif`, `left.gif`, `right.gif`, `up.gif` | GIFs de previsualización de la animación del cliente ejecutivo. |
+| `assets/sprites/customer-business/prompt-used.txt` | Prompt usado para generar el sprite sheet del cliente ejecutivo. |
+| `assets/sprites/customer-business/pipeline-meta.json` | Metadatos de procesado y control de calidad del sprite sheet del cliente ejecutivo. |
+| `assets/sprites/customer-senior/sheet-transparent.png` | Sprite sheet direccional del cliente mayor, usado como variante visual y de comportamiento de clientes. |
+| `assets/sprites/customer-senior/raw-sheet.png` | Imagen generada original del cliente mayor antes del procesado. |
+| `assets/sprites/customer-senior/raw-sheet-clean.png` | Sprite sheet del cliente mayor tras limpiar el fondo magenta. |
+| `assets/sprites/customer-senior/down-1.png` a `assets/sprites/customer-senior/up-4.png` | Frames individuales del cliente mayor, divididos por dirección y paso. |
+| `assets/sprites/customer-senior/down-strip.png`, `left-strip.png`, `right-strip.png`, `up-strip.png` | Tiras direccionales del cliente mayor para previsualización y depuración. |
+| `assets/sprites/customer-senior/down.gif`, `left.gif`, `right.gif`, `up.gif` | GIFs de previsualización de la animación del cliente mayor. |
+| `assets/sprites/customer-senior/prompt-used.txt` | Prompt usado para generar el sprite sheet del cliente mayor. |
+| `assets/sprites/customer-senior/pipeline-meta.json` | Metadatos de procesado y control de calidad del sprite sheet del cliente mayor. |
 | `assets/sprites/shelf/sprite.png` | Sprite de estantería usado para mostrar mobiliario de venta. |
 | `assets/sprites/register/sprite.png` | Sprite de caja registradora usado en la zona de cobro. |
 | `assets/sprites/pallet/sprite.png` | Sprite de palé usado para zona de almacén y entregas. |

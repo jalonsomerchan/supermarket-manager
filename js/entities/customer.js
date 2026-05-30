@@ -9,6 +9,7 @@ export class Customer {
   constructor(config, state, blocked) {
     this.id = nextId++;
     this.config = config;
+    this.type = choice(config.customer.types || [{ id: "regular", sprite: "customer" }]);
     this.state = "shopping";
     this.dir = "up";
     this.frame = 0;
@@ -28,7 +29,8 @@ export class Customer {
 
   makeList(state) {
     const ids = ownedProductIds(state).filter((id) => state.shelves.some((shelf) => shelf.productId === id));
-    return Array.from({ length: Math.ceil(rand(1, 3)) }, () => choice(ids));
+    const length = Math.max(1, Math.ceil(rand(1, 3)) + (this.type.basketBonus || 0));
+    return Array.from({ length }, () => choice(ids));
   }
 
   update(dt, game) {
@@ -50,7 +52,8 @@ export class Customer {
       if (this.state === "shopping") this.state = "inspect";
       if (this.state === "toQueue") {
         this.state = "queue";
-        this.timer = this.config.world.queuePatienceSeconds;
+        this.queuePatience = this.config.world.queuePatienceSeconds * (this.type.patienceFactor || 1);
+        this.timer = this.queuePatience;
       }
       if (this.state === "leaving" || this.state === "angry") this.state = "done";
       return;
@@ -59,7 +62,8 @@ export class Customer {
     const dx = target.x - this.x;
     const dy = target.y - this.y;
     const length = Math.hypot(dx, dy);
-    const speed = this.state === "angry" ? this.config.customer.angrySpeed : this.config.customer.speed;
+    const baseSpeed = this.state === "angry" ? this.config.customer.angrySpeed : this.config.customer.speed;
+    const speed = baseSpeed * (this.type.speedFactor || 1);
     if (length < speed * dt) {
       this.x = target.x;
       this.y = target.y;

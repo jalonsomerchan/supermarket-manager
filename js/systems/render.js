@@ -176,7 +176,7 @@ export class Renderer {
 
   drawActor(actor) {
     const isPlayer = actor.constructor.name === "Player";
-    const image = isPlayer ? this.playerImage(actor) : this.assets.images.customer;
+    const image = isPlayer ? this.playerImage(actor) : this.customerImage(actor);
     const s = this.config.sprites;
     const row = s.directions[actor.dir] ?? 0;
     this.ctx.drawImage(
@@ -197,6 +197,10 @@ export class Renderer {
     if (actor.carry?.empty) return this.assets.images.playerBoxEmpty;
     if (actor.carry) return this.assets.images.playerBoxFull;
     return this.assets.images.player;
+  }
+
+  customerImage(actor) {
+    return this.assets.images[actor.type?.sprite] || this.assets.images.customer;
   }
 
   drawCarryLabel(actor) {
@@ -271,7 +275,7 @@ export class Renderer {
   }
 
   patience(customer) {
-    const ratio = clamp(customer.timer / this.config.world.queuePatienceSeconds, 0, 1);
+    const ratio = clamp(customer.timer / (customer.queuePatience || this.config.world.queuePatienceSeconds), 0, 1);
     const x = Math.round(customer.x);
     const y = Math.round(customer.y);
     this.ctx.fillStyle = "#2b1d24";

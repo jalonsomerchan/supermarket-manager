@@ -2,7 +2,9 @@ import { createState } from "../state.js";
 import { canStand } from "./world.js";
 
 const KEY = "supermarket-manager-save";
+const SETTINGS_KEY = "supermarket-manager-settings";
 const SAVE_VERSION = 2;
+const DEFAULT_SETTINGS = { zoom: 1 };
 
 export function saveGame(game) {
   const state = structuredClone({ ...game.state, movingObject: null, playerPreview: null, paused: false, pauseOpen: false });
@@ -47,6 +49,26 @@ export function loadGame(game, raw) {
   Object.assign(game.player, payload.player || {});
   if (legacySave && !game.state.expansionLevel) migrateToCompactLayout(game);
   return true;
+}
+
+export function loadSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (!raw) return { ...DEFAULT_SETTINGS };
+    return normalizeSettings(JSON.parse(raw));
+  } catch {
+    return { ...DEFAULT_SETTINGS };
+  }
+}
+
+export function saveSettings(settings) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(normalizeSettings(settings)));
+}
+
+function normalizeSettings(settings) {
+  return {
+    zoom: Math.min(1.6, Math.max(0.75, Number(settings?.zoom) || DEFAULT_SETTINGS.zoom))
+  };
 }
 
 function migrateToCompactLayout(game) {

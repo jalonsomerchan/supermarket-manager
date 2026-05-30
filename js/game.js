@@ -8,7 +8,7 @@ import { UI } from "./ui/hud.js";
 import { buildBlocked } from "./systems/world.js";
 import { updateOrders } from "./systems/orders.js";
 import { addReputation } from "./systems/economy.js";
-import { hasLocalSave, loadGame, loadLocal, saveGame, saveLocal } from "./systems/save.js";
+import { hasLocalSave, loadGame, loadLocal, loadSettings, saveGame, saveLocal, saveSettings } from "./systems/save.js";
 
 export class Game {
   constructor(canvas, config) {
@@ -22,6 +22,8 @@ export class Game {
     this.spawnTimer = 2;
     this.last = 0;
     this.interactionTarget = null;
+    this.settings = loadSettings();
+    this.applyZoom();
   }
 
   async start() {
@@ -191,9 +193,38 @@ export class Game {
     this.state.messages.push({ text, type });
   }
 
+  setZoom(zoom) {
+    this.settings.zoom = Math.min(1.6, Math.max(0.75, Number(zoom) || 1));
+    this.applyZoom();
+    saveSettings(this.settings);
+  }
+
+  applyZoom() {
+    const root = this.canvas.closest(".game-card") || this.canvas;
+    root.style.setProperty("--game-zoom", this.settings.zoom.toFixed(2));
+  }
+
+  zoomLabel() {
+    return `${Math.round(this.settings.zoom * 100)}%`;
+  }
+
   save() {
     saveLocal(this);
     this.toast("Partida guardada.", "success");
+  }
+
+  saveToLocal() {
+    this.save();
+  }
+
+  saveToFile() {
+    const blob = new Blob([this.exportSave()], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `supermarket-manager-dia-${this.state.day}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   exportSave() {

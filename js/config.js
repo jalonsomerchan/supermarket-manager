@@ -36,6 +36,9 @@ export const CONFIG = {
     playerBoxFull: "assets/sprites/player-box-full/sheet-transparent.png",
     playerBoxEmpty: "assets/sprites/player-box-empty/sheet-transparent.png",
     customer: "assets/sprites/customer/sheet-transparent.png",
+    customerStudent: "assets/sprites/customer-student/sheet-transparent.png",
+    customerBusiness: "assets/sprites/customer-business/sheet-transparent.png",
+    customerSenior: "assets/sprites/customer-senior/sheet-transparent.png",
     shelf: "assets/sprites/shelf/sprite.png",
     register: "assets/sprites/register/sprite.png",
     pallet: "assets/sprites/pallet/sprite.png",
@@ -116,6 +119,12 @@ export const CONFIG = {
     angrySpeed: 118,
     wanderPauseChance: 0.16,
     buyProbabilityBelowBase: 1,
-    overpriceSoftLimit: 1.2
+    overpriceSoftLimit: 1.2,
+    types: [
+      { id: "regular", sprite: "customer", speedFactor: 1, patienceFactor: 1, basketBonus: 0 },
+      { id: "student", sprite: "customerStudent", speedFactor: 1.15, patienceFactor: 0.85, basketBonus: 0 },
+      { id: "business", sprite: "customerBusiness", speedFactor: 1.05, patienceFactor: 0.8, basketBonus: 1 },
+      { id: "senior", sprite: "customerSenior", speedFactor: 0.75, patienceFactor: 1.35, basketBonus: 0 }
+    ]
   }
 };

@@ -42,6 +42,8 @@ button, input { font: inherit; }
 }
 
 .game-card {
+  --game-base-width: min(calc(100vw - 44px), calc((100vh - 36px) * 1.333));
+  --game-zoom: 1;
   position: relative;
   display: grid;
   place-items: center;
@@ -52,8 +54,11 @@ button, input { font: inherit; }
 }
 
 canvas {
-  width: min(100%, calc((100vh - 36px) * 1.333));
-  max-height: calc(100vh - 36px);
+  width: var(--game-base-width);
+  max-width: none;
+  max-height: none;
+  transform: scale(var(--game-zoom));
+  transform-origin: center;
   image-rendering: pixelated;
   background: #15151a;
 }
@@ -62,10 +67,11 @@ canvas {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: min(100%, calc((100vh - 36px) * 1.333));
+  width: var(--game-base-width);
   aspect-ratio: 4 / 3;
-  max-height: calc(100vh - 36px);
-  transform: translate(-50%, -50%);
+  max-height: none;
+  transform: translate(-50%, -50%) scale(var(--game-zoom));
+  transform-origin: center;
   pointer-events: none;
 }
 
@@ -408,6 +414,32 @@ canvas {
 
 .quick-help p { margin: 0; }
 
+.settings-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid #f8f1d233;
+  border-radius: 14px;
+  background: #120f18aa;
+  text-align: left;
+}
+
+.settings-actions {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.settings-value {
+  min-width: 52px;
+  text-align: center;
+  color: var(--gold);
+  font-weight: 900;
+}
+
 .title-card {
   width: min(560px, 100%);
   text-align: center;
@@ -459,11 +491,9 @@ canvas {
   .touch { display: flex; }
   canvas {
     width: 100%;
-    max-height: 68vh;
   }
   .world-labels {
     width: 100%;
-    max-height: 68vh;
   }
   .toast { bottom: 108px; }
   .terminal-card {

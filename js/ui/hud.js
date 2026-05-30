@@ -243,13 +243,17 @@ export class UI {
     this.game.state.paused = true;
     this.game.state.pauseOpen = true;
     this.modal.classList.remove("hidden");
-    this.modal.innerHTML = `<article class="modal-card title-card"><h1>Pausa</h1><div class="quick-help"><p><strong>Movimiento:</strong> WASD o flechas.</p><p><strong>Interactuar:</strong> E, Espacio o Enter.</p><p><strong>Tienda:</strong> O abre/cierra. Q coge, suelta o coloca objetos.</p><p><strong>Gestion:</strong> usa el ordenador para pedidos, precios, licencias, mejoras y mobiliario.</p></div><div class="menu-stack"><button class="pixel-btn" data-pause-continue="true">Continuar</button><button class="pixel-btn" data-save-local="true">Guardar localStorage</button><button class="pixel-btn" data-save-file="true">Guardar archivo JSON</button><button class="pixel-btn" data-exit-title="true">Salir al titulo</button></div></article>`;
+    this.modal.innerHTML = `<article class="modal-card title-card"><h1>Pausa</h1><div class="quick-help"><p><strong>Movimiento:</strong> WASD o flechas.</p><p><strong>Interactuar:</strong> E, Espacio o Enter.</p><p><strong>Tienda:</strong> O abre/cierra. Q coge, suelta o coloca objetos.</p><p><strong>Gestion:</strong> usa el ordenador para pedidos, precios, licencias, mejoras y mobiliario.</p></div><div class="settings-row"><div><strong>Zoom</strong><p class="terminal-note">Se guarda automaticamente en este navegador.</p></div><div class="settings-actions"><button class="pixel-btn" data-zoom="-0.1">-</button><span class="settings-value">${this.game.zoomLabel()}</span><button class="pixel-btn" data-zoom="0.1">+</button></div></div><div class="menu-stack"><button class="pixel-btn" data-pause-continue="true">Continuar</button><button class="pixel-btn" data-save-local="true">Guardar localStorage</button><button class="pixel-btn" data-save-file="true">Guardar archivo JSON</button><button class="pixel-btn" data-exit-title="true">Salir al titulo</button></div></article>`;
     this.modal.onclick = (event) => {
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;
       if (target.dataset.pauseContinue) this.closeModal();
       if (target.dataset.saveLocal) this.game.saveToLocal();
       if (target.dataset.saveFile) this.game.saveToFile();
+      if (target.dataset.zoom) {
+        this.game.setZoom(this.game.settings.zoom + Number(target.dataset.zoom));
+        this.openPauseMenu();
+      }
       if (target.dataset.exitTitle) this.game.exitToTitle();
     };
     this.bindModalKeys();
